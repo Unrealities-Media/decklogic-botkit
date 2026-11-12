@@ -3,7 +3,9 @@
 //! file), and `DECKLOGIC_SIMLIB_PACK` (a pack file; default the HOB pack of a
 //! DeckLogic checkout this crate sits in).
 
-use decklogic_simlib_client::{BotSpec, Decision, Error, GameSpec, Library, LIBRARY};
+use decklogic_simlib_client::{
+    BotSpec, Decision, Error, Game, GameSpec, Library, SampleSpec, LIBRARY,
+};
 
 fn library() -> Library {
     assert!(
@@ -96,4 +98,47 @@ fn a_game_outlives_its_engine_and_moves_threads() {
     })
     .join()
     .unwrap();
+}
+
+#[test]
+fn samples_and_copies_play_on_from_the_same_decision() {
+    let lib = library();
+    let engine = lib.engine(pack()).unwrap();
+    let decks = engine.decks().unwrap();
+    let mut game = engine
+        .game(&GameSpec::new(
+            [decks[0].main.clone(), decks[1].main.clone()],
+            3,
+        ))
+        .unwrap();
+    let mut bots = [0u8, 1].map(|seat| game.bot(&BotSpec::new("random", seat, 3)).unwrap());
+    for _ in 0..30 {
+        let seat = game.seat().unwrap();
+        let id = bots[seat as usize].choose(&mut game).unwrap();
+        game.apply(id).unwrap();
+    }
+    let view = |g: &mut Game| match g.decision().unwrap() {
+        Decision::Choose {
+            observation,
+            question,
+            actions,
+            ..
+        } => serde_json::to_string(&(observation, question, actions.len())).unwrap(),
+        Decision::Over { .. } => panic!("over"),
+    };
+    let here = view(&mut game);
+    let mut copy = match game.try_clone() {
+        Err(Error::Load(why)) => return eprintln!("skipped: {why}"),
+        copy => copy.unwrap(),
+    };
+    assert_eq!(view(&mut copy), here);
+    let mut world = game.sample(&SampleSpec::new(9)).unwrap();
+    assert_eq!(view(&mut world), here);
+    world.apply(0).unwrap();
+    assert_eq!(view(&mut game), here, "the real game is untouched");
+    let refused = game.sample(&SampleSpec {
+        knowledge: Some("open-hand".into()),
+        ..SampleSpec::new(1)
+    });
+    assert!(matches!(refused, Err(Error::Call(m)) if m.contains("knowledge")));
 }

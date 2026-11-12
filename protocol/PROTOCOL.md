@@ -180,7 +180,11 @@ Arena data is private: do not redistribute it.
 | No answer inside the decision limit, `hello.limits.decision_ms`, default 5 s (`timeout`) | The process is killed and you forfeit the game |
 | Process exits or closes stdout (`crash`) | You forfeit the game |
 | A line that is not valid protocol JSON (`protocol`) | You forfeit the game |
+| A line longer than 1 MiB (`protocol`) | You forfeit the game; the host stops reading at the cap |
 | `ready` names another protocol version | The run is refused (exit code 2) |
+
+Reports show your `ready` name and version with control and
+direction-override characters removed, at most 64 characters each.
 
 A forfeit is a loss for that game only; the next game starts a fresh process.
 Never fold a forfeit into your own win rate: reports count forfeits by cause.

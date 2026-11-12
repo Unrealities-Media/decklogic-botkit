@@ -26,6 +26,8 @@ by the same contract tests. A bot written for one route reads the other.
 | `dls_game_apply(game, id)` | Answer with an offered action id |
 | `dls_bot_new(game, spec)` | Seat one of our bots: `{"bot":"deep","seat":1,"seed":7}` |
 | `dls_bot_choose(bot, game)` | That bot's pick, **not applied**: play it, or keep it as a training label |
+| `dls_game_sample(game, spec)` | One world the acting seat cannot tell apart from the game, as a new game from the same decision: `{"seed":N}`, optionally `"knowledge":"format-pool-v1"` with a `"pool"` of grp ids |
+| `dls_game_clone(game)` | An independent copy in the same state |
 
 A decision is the protocol's `decision` message plus `seat`:
 
@@ -42,6 +44,56 @@ Bots: `random`, `beginner`, `quick` and `deep` are the ladder, each with its
 own knowledge of the opponent. Any engine player label (`heuristic-v3`,
 `search-v3:96:48`, ...) also works, with `"knowledge"` of `blind-public-v1`
 (the default) or `format-pool-v1` and an optional `"pool"` of grp ids.
+
+## Looking ahead
+
+`dls_game_sample` and `dls_game_clone` arrive in the first release after
+`sim-engine-v213`; the clients raise a clear error on an older library.
+
+A search bot tries actions and plays them out. Do that on a **sample**, never
+on the game you are playing: a copy of the real game knows the opponent's hand
+and every future draw, and so does a fresh game replayed from its seed.
+
+`dls_game_sample` hands you one world that the seat to act cannot tell apart
+from the real game. Its own view, the question and the offered actions are
+identical. The opponent's hand, the order of both libraries, future shuffles
+and the game seed are drawn from what that seat knows: its own decklist by
+default (`blind-public-v1`), or a pool of cards the opponent's deck may hold
+(`format-pool-v1`, with `pool`). Nothing hidden is read from the real game: a
+sample drawn from the real game and one drawn with the same seed from another
+world the seat cannot tell apart are the same game, and DeckLogic's tests check
+that. Built-in bots seated in a sample assume the same knowledge.
+
+`dls_game_clone` copies a game. Copy a sample once per action you want to
+compare, so every action is judged in the same world:
+
+```python
+scores = {a["id"]: 0 for a in decision["actions"]}
+for w in range(16):
+    world = game.sample(seed=w)                 # one world the seat can't rule out
+    for action_id in scores:
+        branch = world.clone()
+        branch.apply(action_id)
+        bots = [branch.bot("quick", seat=s, seed=w) for s in (0, 1)]
+        while (s := branch.seat()) is not None:
+            branch.apply(bots[s].choose())
+        scores[action_id] += branch.decision()["winner"] == decision["seat"]
+best = max(scores, key=scores.get)
+```
+
+On TRK a sample costs about 80 µs and a copy about 12 µs; a play-out with
+`quick` at both seats is about 20 to 40 ms from Python. A sample is refused
+(`NULL`, with the reason in `dls_last_error`) once the game is over and at the
+rare decision the simulator cannot resample, such as part-way through a
+replacement it is replaying: answer it without looking ahead.
+
+[`python/lookahead_bot.py`](python/lookahead_bot.py) is this bot made
+whole: candidate pruning, a time budget, a built-in prior for ties and forced
+moves, and a harness that scores it against a built-in bot in mirrored pairs.
+
+The stdio protocol has no game to sample, so a bot that looks ahead runs
+in-process and is scored with your own harness (mirrored pairs, as `botkit
+match` does). `botkit` hosts only stdio bots.
 
 ## Rules
 
