@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "decklogic-bot-1.schema.json",
+  "title": "decklogic-bot/1 message",
+  "description": "One JSON object per line. Host-to-bot and bot-to-host messages are distinguished by `type`. Unknown fields must be ignored.",
+  "oneOf": [
+    { "$ref": "#/$defs/hello" },
+    { "$ref": "#/$defs/ready" },
+    { "$ref": "#/$defs/game_start" },
+    { "$ref": "#/$defs/decision" },
+    { "$ref": "#/$defs/action" },
+    { "$ref": "#/$defs/game_end" },
+    { "$ref": "#/$defs/bye" }
+  ],
+  "$defs": {
+    "hello": {
+      "description": "host to bot",
+      "type": "object",
+      "required": ["type", "protocol", "engine", "abi"],
+      "properties": {
+        "type": { "const": "hello" },
+        "protocol": { "const": "decklogic-bot/1" },
+        "engine": { "type": "string" },
+        "abi": { "type": "integer", "minimum": 0 },
+        "cards": { "type": "object", "description": "Optional: the decklogic-cards/1 sheet for the pack in play (see PROTOCOL.md, What a card is)." },
+        "limits": {
+          "type": "object",
+          "description": "Optional: the time limits the host enforces, in milliseconds.",
+          "properties": { "decision_ms": { "type": "integer" }, "handshake_ms": { "type": "integer" } }
+        }
+      }
+    },
+    "ready": {
+      "description": "bot to host",
+      "type": "object",
+      "required": ["type", "protocol", "name"],
+      "properties": {
+        "type": { "const": "ready" },
+        "protocol": { "type": "string" },
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string" }
+      }
+    },
+    "game_start": {
+      "description": "host to bot",
+      "type": "object",
+      "required": ["type", "game", "seat", "on_play", "seed", "deck"],
+      "properties": {
+        "type": { "const": "game_start" },
+        "game": { "type": "integer", "minimum": 0 },
+        "seat": { "enum": [0, 1] },
+        "on_play": { "type": "boolean" },
+        "seed": { "type": "integer", "minimum": 0 },
+        "deck": { "type": "array", "items": { "type": "integer" } }
+      }
+    },
+    "decision": {
+      "description": "host to bot",
+      "type": "object",
+      "required": ["type", "n", "observation", "question", "actions"],
+      "properties": {
+        "type": { "const": "decision" },
+        "n": { "type": "integer", "minimum": 0 },
+        "observation": { "type": "object" },
+        "question": {
+          "type": "object",
+          "description": "What is being asked: `kind` names the question (question-kinds.txt, PROTOCOL.md Questions) and the other keys are its fields. Unknown kinds and fields may appear within decklogic-bot/1.",
+          "required": ["kind"],
+          "properties": { "kind": { "type": "string" }, "seat": { "type": "integer" } }
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "action"],
+            "properties": {
+              "id": { "type": "integer", "minimum": 0 },
+              "label": { "type": "string", "description": "Informational: the engine's Debug text. Not stable; may change with any engine build." },
+              "action": { "type": "object", "required": ["action"], "description": "Stable contract: `action` names the kind; the other keys are its fields. Kinds and fields are listed in action-kinds.txt and only ever added within decklogic-bot/1." }
+            }
+          }
+        }
+      }
+    },
+    "action": {
+      "description": "bot to host",
+      "type": "object",
+      "required": ["type", "n", "id"],
+      "properties": {
+        "type": { "const": "action" },
+        "n": { "type": "integer", "minimum": 0 },
+        "id": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "game_end": {
+      "description": "host to bot",
+      "type": "object",
+      "required": ["type", "result"],
+      "properties": {
+        "type": { "const": "game_end" },
+        "result": { "enum": ["win", "loss", "draw", "capped"] }
+      }
+    },
+    "bye": {
+      "description": "host to bot",
+      "type": "object",
+      "required": ["type"],
+      "properties": { "type": { "const": "bye" } }
+    }
+  }
+}

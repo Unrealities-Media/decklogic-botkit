@@ -1,0 +1,7 @@
+# decklogic-bot/1 observation fields: `Struct field field ...`, one per line.
+# Checked by DeckLogic's contract tests. Removing or
+# renaming a field is a breaking protocol change; adding one is allowed.
+SeatSummary face_down_exile_count graveyard_count hand_count lands_played library_count life mulligans seat
+SeatView active board hand on_play opponent revealed seat stack step turn you
+StackView controller grp_id kind source stack_item_id target_objects target_seats target_stack_items token_index
+VisibleObject attached_to attack_defender attack_state blocking board_age controller controller_draws_on_cast damage grp_id id is_creature is_land keywords loyalty mana_value minus_counters mode_controller_draws_on_cast mode_targeted_player_draws_on_cast mode_touches owner plus_counters power prepared summoning_sick tapped targeted_player_draws_on_cast token_index touch toughness ward zone

@@ -1,0 +1,113 @@
+# decklogic-bot/1 questions and values: `group/variant field field ...`, one per line.
+# Checked by DeckLogic's contract tests; shapes in PROTOCOL.md.
+# Removing or renaming an entry is a breaking protocol change; adding one is allowed.
+attack_defender/permanent
+attack_defender/player
+cast_face/own
+cast_face/second
+cast_origin/exile
+cast_origin/graveyard
+cast_origin/graveyard_artifact_creature incarnation source
+cast_origin/hand
+cast_origin/library_top incarnation source
+cast_origin/outside_the_game grp
+cast_origin/prepared
+pick_purpose/allow_opponent_draw
+pick_purpose/amass_army
+pick_purpose/attach_any_number_equipment
+pick_purpose/attach_equipment
+pick_purpose/attach_returned_aura
+pick_purpose/cast_copy_or_cease
+pick_purpose/cast_exiled_or_damage
+pick_purpose/cast_exiled_or_leave
+pick_purpose/controller_chosen_discard owner
+pick_purpose/controller_chosen_exile owner
+pick_purpose/cost_tap_payer
+pick_purpose/counter_unless_payment
+pick_purpose/crew
+pick_purpose/discard
+pick_purpose/discover_cast_or_hand
+pick_purpose/entry_effect_order
+pick_purpose/entry_replacement_order
+pick_purpose/exiled_land_play_while_exiled
+pick_purpose/exiled_with_source_to_hand
+pick_purpose/from_top
+pick_purpose/legend_rule
+pick_purpose/library_basic_subtype_to_exiled_with
+pick_purpose/library_basic_to_battlefield_tapped
+pick_purpose/library_basic_to_top
+pick_purpose/library_basics_split
+pick_purpose/library_basics_to_hand
+pick_purpose/library_dragon
+pick_purpose/library_filtered_to_top
+pick_purpose/library_land_subtype_to_hand
+pick_purpose/library_lands
+pick_purpose/milled_to_hand
+pick_purpose/optional_counter_removal
+pick_purpose/optional_discard_hand
+pick_purpose/optional_draw
+pick_purpose/optional_effect
+pick_purpose/optional_exile_self_and_graveyard_by_name
+pick_purpose/optional_life_payment
+pick_purpose/optional_mana_and_graveyard_exile
+pick_purpose/optional_mana_payment
+pick_purpose/own_hand_exile_with_source
+pick_purpose/pay_life_as_enters
+pick_purpose/proliferate
+pick_purpose/punisher_payment
+pick_purpose/put_land_from_hand
+pick_purpose/put_on_library_bottom
+pick_purpose/return_controlled_land
+pick_purpose/return_from_graveyard
+pick_purpose/riddles_partition
+pick_purpose/sacrifice
+pick_purpose/searched_library_to_exile_playable library
+pick_purpose/tap_humans
+pick_purpose/tutor_land_to_battlefield tapped
+pick_purpose/tutor_to_graveyard
+pick_purpose/tutor_to_hand
+pick_purpose/tutor_to_hand_unrevealed
+pick_purpose/ward_payment
+question/assign_combat_damage attacker blocker first_strike lethal remaining seat tramples_over
+question/assign_top revealed seat to_graveyard
+question/attack_tax seat
+question/behold_elf seat
+question/behold_jace seat
+question/bottom count seat
+question/cast_card_copies seat source
+question/cast_produced_within_budget remaining seat source step steps
+question/choose_counter_kind seat target
+question/choose_pile face_down_count face_up_count seat
+question/choose_revealed_from_outside_the_game revealed seat source
+question/counter_replacement amount counter seat target
+question/declare_attackers seat
+question/declare_blockers seat
+question/entry_attack_defender card seat
+question/library_placement card seat
+question/mulligan seat taken
+question/pick context purpose seat
+question/pick_one_per_card_type card_type seat source step steps
+question/priority seat window
+question/remove_counters remaining seat target
+question/reveal_from_outside_the_game already seat source
+question/stored_choice domain seat source
+question/trigger_order batch seat
+question/trigger_targets seat source
+question/untap object seat
+target/none
+target/object
+target/player
+target/stack_item
+touch/Helps
+touch/Hurts
+touch/Neutral
+window/draw
+window/end_step
+window/first_strike_damage
+window/post_attack_response
+window/post_block_response
+window/postcombat_main
+window/precombat_main
+window/stack_response
+window/trigger_response
+window/upkeep

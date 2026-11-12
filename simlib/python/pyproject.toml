@@ -1,0 +1,24 @@
+# The Python client for the simulator library (decklogic-simlib/1), with the
+# reinforcement-learning environments and trace recorder, installable so a
+# training script elsewhere can `import simlib` (pip install bots/simlib/python).
+# The library itself is not in the package: point DECKLOGIC_SIMLIB or
+# DECKLOGIC_SIMLIB_DIR at the release's file, or pass its path to Library().
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "decklogic-simlib"
+version = "1.0.0"
+description = "ctypes client for the DeckLogic simulator library: games in-process, built-in bots, Gymnasium/PettingZoo-style environments and play traces."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+gymnasium = ["gymnasium>=1.0"]
+
+[project.scripts]
+simlib-traces = "simlib_traces:main"
+
+[tool.setuptools]
+py-modules = ["simlib", "simlib_env", "simlib_traces"]

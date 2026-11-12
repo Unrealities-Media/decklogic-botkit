@@ -1,0 +1,12 @@
+[package]
+name = "rust-random-bot"
+version = "0.1.0"
+edition = "2021"
+description = "A decklogic-bot/1 bot in Rust with no simulator dependency: random legal action."
+
+# Not a member of the DeckLogic workspace: it must build on its own, which is
+# what an outside developer's crate looks like.
+[workspace]
+
+[dependencies]
+serde_json = "1.0"

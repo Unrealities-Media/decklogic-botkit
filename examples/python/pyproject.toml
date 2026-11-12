@@ -1,0 +1,16 @@
+# The Python client for decklogic-bot/1, installable so a bot outside this
+# directory can `import botlib` (pip install bots/examples/python). Copying
+# botlib.py next to your bot works just as well; it has no dependencies.
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "decklogic-botlib"
+version = "1.3.0"
+description = "Client for the DeckLogic bot protocol decklogic-bot/1: typed decisions, actions and the card sheet, tolerant of everything a newer engine adds."
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.setuptools]
+py-modules = ["botlib"]

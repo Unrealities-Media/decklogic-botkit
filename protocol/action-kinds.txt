@@ -1,0 +1,52 @@
+# decklogic-bot/1 action kinds: `kind field field ...`, one per line.
+# Checked by DeckLogic's contract tests. Removing or renaming
+# an entry is a breaking protocol change; adding one is allowed.
+activate ability equip_alt mode payment source targets x
+activate_granted granted mode payment source targets x
+activate_mana_grant ability grantor grantor_incarnation op source source_incarnation
+activate_paying_life ability life mode payment source targets x
+add_attacker creature defender
+add_block attacker blocker
+assign_combat_damage amount
+assign_top other top
+behold_elf_from_hand card
+behold_elf_permanent permanent
+behold_jace_from_hand card
+behold_jace_permanent permanent
+browse_card_names prefix
+cast additional_cost_choice beam_up_grant card face gift kicked mode origin payment replicate_paid targets x
+choose_attack_subset attackers
+choose_card_name name
+choose_color color
+choose_counter_kind kind
+choose_counter_replacement effect event step
+choose_entry_attack_defender defender
+choose_entry_replacement effect index source
+choose_number number
+choose_odd_or_even parity
+choose_pile face_up
+choose_stored_choice creature_type
+choose_trigger_order batch entry
+choose_trigger_targets damage_split mode targets
+choose_untap object untap
+decline_optional
+decline_take
+done_attacking
+done_blocking
+done_selecting
+keep
+mulligan
+pass
+pay_life amount
+pay_optional_cost
+pay_ward payment
+pick card
+pick_card_from_outside card
+play_land card
+play_land_from_outside card
+put_on_bottom cards
+put_on_library card placement
+remove_counter kind
+search_and_fail
+select_for_proliferate
+take_life_loss
