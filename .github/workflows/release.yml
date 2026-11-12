@@ -1,0 +1,231 @@
+# Builds and publishes a bot kit release whenever DeckLogic's engine changes.
+#
+# Once a day (and on demand) it reads DeckLogic's engine stamp. If this
+# repository has no release for that stamp yet, it builds botkit and the
+# simulator library on Linux, Windows and macOS from private DeckLogic, smoke
+# tests each build, and publishes a release named after the stamp with every
+# archive and SHA256SUMS. If the release exists it stops after the check.
+#
+# Cost: this repository is public, so GitHub's hosted runners are free. It
+# never runs on DeckLogic's self-hosted runner, which is registered to DeckLogic
+# only (CI-27); a public repository must never schedule on a self-hosted one.
+#
+# One secret: DECKLOGIC_DEPLOY_KEY, the private half of a read-only deploy key
+# on Unrealities-Media/decklogic. It is used only to check out that repository.
+# This workflow never runs on pull requests, so a fork can never read it.
+#
+# DeckLogic's source is private and this repository's logs are public, so the
+# build's output (which would quote source lines in any warning or error) goes
+# to a file that is never printed or uploaded. A failed build says only that it
+# failed; reproduce it locally with the same DeckLogic commit.
+name: Release
+
+on:
+  schedule:
+    - cron: "17 9 * * *" # daily, 09:17 UTC
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "DeckLogic branch, tag or commit to build"
+        default: main
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  DECKLOGIC_REF: ${{ inputs.ref || 'main' }}
+
+jobs:
+  check:
+    name: Engine stamp
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      engine: ${{ steps.stamp.outputs.engine }}
+      abi: ${{ steps.stamp.outputs.abi }}
+      sha: ${{ steps.stamp.outputs.sha }}
+      build: ${{ steps.exists.outputs.build }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Unrealities-Media/decklogic
+          ref: ${{ env.DECKLOGIC_REF }}
+          ssh-key: ${{ secrets.DECKLOGIC_DEPLOY_KEY }}
+          path: decklogic
+          sparse-checkout: src-tauri/sim/src/version.rs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - id: stamp
+        run: |
+          v=decklogic/src-tauri/sim/src/version.rs
+          engine=$(grep -oP 'pub const ENGINE_VERSION: &str = "\K[^"]+' "$v")
+          abi=$(grep -oP 'pub const ENGINE_ABI: u32 = \K[0-9]+' "$v")
+          test -n "$engine" && test -n "$abi" || { echo "::error::no engine stamp in version.rs"; exit 1; }
+          echo "engine=$engine" >> "$GITHUB_OUTPUT"
+          echo "abi=$abi" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git -C decklogic rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "DeckLogic $(git -C decklogic rev-parse --short=12 HEAD): $engine, ABI $abi"
+      - id: exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENGINE: ${{ steps.stamp.outputs.engine }}
+        run: |
+          # A release is never replaced: to rebuild one, delete it on GitHub.
+          if gh release view "$ENGINE" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "release $ENGINE exists; nothing to do"
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Build (${{ matrix.os }})
+    needs: check
+    if: needs.check.outputs.build == 'true'
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          # glibc 2.35: the Linux build runs on Ubuntu 22.04 and newer.
+          - runner: ubuntu-22.04
+            os: linux-x86_64
+            lib: libdecklogic_simlib.so
+            exe: botkit
+          - runner: windows-latest
+            os: windows-x86_64
+            lib: decklogic_simlib.dll
+            exe: botkit.exe
+          - runner: macos-latest
+            os: macos-arm64
+            lib: libdecklogic_simlib.dylib
+            exe: botkit
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: kit
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Unrealities-Media/decklogic
+          ref: ${{ needs.check.outputs.sha }}
+          ssh-key: ${{ secrets.DECKLOGIC_DEPLOY_KEY }}
+          path: decklogic
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable branch @ 2026-07-16
+        with:
+          toolchain: "1.99.1" # = DeckLogic's rust-toolchain.toml
+      - name: Build (output kept private)
+        shell: bash
+        working-directory: decklogic
+        run: |
+          # Two builds: a --bin filter on one command would skip the library.
+          if ! { cargo build --release --locked -p decklogic-botkit --bin botkit \
+              && cargo build --release --locked -p decklogic-simlib; } > "$RUNNER_TEMP/build.log" 2>&1; then
+            echo "::error::the build failed; its output is not shown because DeckLogic's source is private. Build DeckLogic ${{ needs.check.outputs.sha }} locally."
+            exit 1
+          fi
+          test -f "target/release/${{ matrix.lib }}" || { echo "::error::no ${{ matrix.lib }}"; exit 1; }
+      - name: Package
+        id: package
+        shell: bash
+        env:
+          ENGINE: ${{ needs.check.outputs.engine }}
+        run: |
+          name="decklogic-botkit-$ENGINE-${{ matrix.os }}"
+          mkdir -p "dist/$name"
+          cp "decklogic/target/release/${{ matrix.exe }}" "decklogic/target/release/${{ matrix.lib }}" \
+             decklogic/src-tauri/simlib/include/decklogic_simlib.h kit/LICENSE "dist/$name/"
+          if [ "$RUNNER_OS" != Windows ]; then
+            strip "dist/$name/${{ matrix.exe }}" 2>/dev/null || true
+          fi
+          dir="$PWD/dist/$name"
+          # Python on Windows needs a Windows path to load the DLL.
+          if [ "$RUNNER_OS" = Windows ]; then dir=$(cygpath -w "$dir"); fi
+          echo "dir=$dir" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Smoke test
+        shell: bash
+        env:
+          DIR: ${{ steps.package.outputs.dir }}
+          LIB: ${{ matrix.lib }}
+          ENGINE: ${{ needs.check.outputs.engine }}
+          ABI: ${{ needs.check.outputs.abi }}
+        run: |
+          "$DIR/${{ matrix.exe }}" --help > /dev/null
+          python kit/.github/smoke.py
+      - name: Archive
+        shell: bash
+        env:
+          NAME: ${{ steps.package.outputs.name }}
+        run: |
+          cd dist
+          if [ "$RUNNER_OS" = Windows ]; then
+            7z a "$NAME.zip" "$NAME" > /dev/null
+          else
+            tar --owner=0 --group=0 -czf "$NAME.tar.gz" "$NAME" 2>/dev/null || tar -czf "$NAME.tar.gz" "$NAME"
+          fi
+          rm -rf "$NAME"
+          ls -l
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ matrix.os }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 3
+
+  publish:
+    name: Publish release
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read # to collect this run's archives
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Collect the archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir dist-in
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENGINE: ${{ needs.check.outputs.engine }}
+          ABI: ${{ needs.check.outputs.abi }}
+          SHA: ${{ needs.check.outputs.sha }}
+        run: |
+          mkdir dist && find dist-in -type f \( -name '*.tar.gz' -o -name '*.zip' \) -exec mv {} dist/ \;
+          test "$(ls dist | wc -l)" -eq 3 || { ls -R dist-in; echo "::error::expected three archives"; exit 1; }
+          (cd dist && sha256sum * > SHA256SUMS && cat SHA256SUMS)
+          {
+            echo "Built automatically from DeckLogic \`${SHA::12}\` with Rust 1.99.1."
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Engine | \`$ENGINE\`, ABI $ABI |"
+            echo "| Protocol | \`decklogic-bot/1\` |"
+            echo "| Library interface | \`decklogic-simlib/1\` |"
+            echo "| Platforms | Linux x86_64 (glibc 2.35+), Windows x86_64, macOS arm64 |"
+            echo
+            echo "Each archive holds \`botkit\`, the simulator library, \`decklogic_simlib.h\` and the licence."
+            echo "Start with [GUIDE.md](https://github.com/$GITHUB_REPOSITORY/blob/main/GUIDE.md). Scores compare only within one engine version and one pack;"
+            echo "card packs are not in the release."
+            echo
+            echo '```'
+            cat dist/SHA256SUMS
+            echo '```'
+          } > notes.md
+          gh release create "$ENGINE" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "decklogic-botkit $ENGINE" --notes-file notes.md --latest
