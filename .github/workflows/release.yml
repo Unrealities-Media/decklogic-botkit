@@ -10,8 +10,10 @@
 # never runs on DeckLogic's self-hosted runner, which is registered to DeckLogic
 # only (CI-27); a public repository must never schedule on a self-hosted one.
 #
-# One secret: DECKLOGIC_DEPLOY_KEY, the private half of a read-only deploy key
-# on Unrealities-Media/decklogic. It is used only to check out that repository.
+# One secret: DECKLOGIC_READ_TOKEN, a fine-grained personal access token with
+# Contents: read-only on Unrealities-Media/decklogic and nothing else (the
+# organization's policy turns deploy keys off). It is used only to check out
+# that repository, and it expires: renew it before the date set on it.
 # This workflow never runs on pull requests, so a fork can never read it.
 #
 # DeckLogic's source is private and this repository's logs are public, so the
@@ -55,7 +57,7 @@ jobs:
         with:
           repository: Unrealities-Media/decklogic
           ref: ${{ env.DECKLOGIC_REF }}
-          ssh-key: ${{ secrets.DECKLOGIC_DEPLOY_KEY }}
+          token: ${{ secrets.DECKLOGIC_READ_TOKEN }}
           path: decklogic
           sparse-checkout: src-tauri/sim/src/version.rs
           sparse-checkout-cone-mode: false
@@ -115,7 +117,7 @@ jobs:
         with:
           repository: Unrealities-Media/decklogic
           ref: ${{ needs.check.outputs.sha }}
-          ssh-key: ${{ secrets.DECKLOGIC_DEPLOY_KEY }}
+          token: ${{ secrets.DECKLOGIC_READ_TOKEN }}
           path: decklogic
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable branch @ 2026-07-16
