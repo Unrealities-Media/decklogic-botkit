@@ -22,10 +22,13 @@ REQUIRED_INPUTS = set(PRIVATE_INPUTS[:3]) | {
 
 def git(repo, *args):
     # Never expose private Git stderr or file contents through a public traceback.
-    result = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True)
+    result = subprocess.run(["git", "-C", str(repo), *args], capture_output=True)
     if result.returncode:
         raise RuntimeError("Git identity lookup failed; inspect the pinned checkout privately")
-    return result.stdout.strip()
+    try:
+        return result.stdout.decode("utf-8").strip()
+    except UnicodeDecodeError:
+        raise RuntimeError("Git identity output is not UTF-8; inspect the pinned checkout privately") from None
 
 
 def identity(private, public, private_ref="HEAD", public_ref="HEAD"):

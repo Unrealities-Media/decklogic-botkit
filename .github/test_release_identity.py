@@ -79,6 +79,25 @@ class ReleaseIdentity(unittest.TestCase):
         self.assertEqual(before["kit_sha256"], after["kit_sha256"])
         self.assertNotEqual(before["private_commit"], after["private_commit"])
 
+    def test_unicode_version_comments_do_not_depend_on_windows_code_page(self):
+        commit(self.private, "src-tauri/sim/src/version.rs",
+               '// “engine” provenance — 日本語\n'
+               'pub const ENGINE_VERSION: &str = "sim-engine-v213";\n'
+               'pub const ENGINE_ABI: u32 = 212;\n')
+        result = identity(self.private, self.public)
+        self.assertEqual(result["engine"], "sim-engine-v213")
+        self.assertEqual(result["abi"], 212)
+
+    def test_non_utf8_version_output_fails_without_private_contents(self):
+        path = "src-tauri/sim/src/version.rs"
+        (self.private / path).write_bytes(b"// private-content-\xff\n")
+        subprocess.run(["git", "-C", str(self.private), "add", "--", path],
+                       check=True, capture_output=True)
+        commit(self.private, "marker", "non-UTF8 version fixture\n")
+        with self.assertRaisesRegex(RuntimeError, "not UTF-8") as caught:
+            identity(self.private, self.public)
+        self.assertNotIn("private-content", str(caught.exception))
+
     def test_host_change_without_engine_bump_rebuilds(self):
         before = identity(self.private, self.public)
         commit(self.private, "src-tauri/botkit/src/lib.rs", "// host update\n")
