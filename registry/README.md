@@ -69,6 +69,10 @@ handshake/decision limits, game configuration, card-sheet hash and probe mode.
 use the same intended budget for qualification and tournament play. Bare
 `verify --dir ...` remains source verification only. Legacy receipts require
 requalification before next-kit registry play.
+The local candidate now uses `decklogic-botkit-qualification/3`: UTF-8 path
+components are hashed without treating a literal Unix backslash as a directory
+separator. Earlier candidate receipts require requalification, even where their
+ordinary source hash remains unchanged. This policy is not part of published v213.
 
 Keep logs and reports outside the entry. Package required distributable assets
 alongside source, outside excluded cache directories (`.venv`, `node_modules`,
