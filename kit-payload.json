@@ -1,6 +1,6 @@
 {
   "schema": "decklogic-kit-payload/1",
-  "source_commit": "a0338a8bb5cfda09edabe38ef38578df9eecab4f",
+  "source_commit": "28f26dd474899998a60db497f3e44a84eb237fb8",
   "payload_sha256": "1639ae6e0a49671b3327f4feabd5cf2753dbeae9bf76adbe7b21c094e5d3a136",
   "files": {
     "protocol/decklogic-bot-1.schema.json": "3889c791de89a8fd6b7e3bae073a8742dfab8332f671d826fafe4743b54bb68c",
