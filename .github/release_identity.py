@@ -14,6 +14,8 @@ PRIVATE_INPUTS = (
     "Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".cargo",
     "src-tauri/sim", "src-tauri/botkit", "src-tauri/simlib",
     "bots/protocol", "docs/research/sim66-hob-drafted-league",
+    # Release reconciliation must rerun when its generator or inputs change.
+    "bots/export-kit.mjs", "bots/sample/demo",
 )
 REQUIRED_INPUTS = set(PRIVATE_INPUTS[:3]) | {
     "src-tauri/sim", "src-tauri/botkit", "src-tauri/simlib",

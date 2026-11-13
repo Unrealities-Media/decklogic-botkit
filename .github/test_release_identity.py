@@ -124,6 +124,15 @@ class ReleaseIdentity(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "Required build input absent"):
             identity(self.private, self.public)
 
+    def test_private_export_gate_and_demo_changes_recheck_release(self):
+        for path in ("bots/export-kit.mjs", "bots/sample/demo/decks.json"):
+            commit(self.private, path, "old input\n")
+            before = identity(self.private, self.public)
+            commit(self.private, path, "changed input\n")
+            after = identity(self.private, self.public)
+            self.assertEqual(before["engine"], after["engine"])
+            self.assertNotEqual(before["tag"], after["tag"])
+
 
 class ArchiveCollection(unittest.TestCase):
     def test_collects_platform_manifests_and_rejects_mixed_source_identity(self):

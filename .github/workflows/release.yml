@@ -76,10 +76,27 @@ jobs:
           ref: ${{ env.DECKLOGIC_REF }}
           token: ${{ secrets.DECKLOGIC_READ_TOKEN }}
           path: decklogic
-          # Identity uses Git trees, not materialized files; only read the stamp.
-          sparse-checkout: src-tauri/sim/src/version.rs
+          # Identity uses Git trees; materialize only generated-payload inputs.
+          sparse-checkout: |
+            src-tauri/sim/src/version.rs
+            src-tauri/simlib/include/decklogic_simlib.h
+            bots/export-kit.mjs
+            bots/protocol
+            bots/sample/demo
           sparse-checkout-cone-mode: false
           persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      - name: Check generated SDK against pinned source (output kept private)
+        shell: bash
+        run: |
+          # Content comparison permits older export provenance when bytes match.
+          # Missing/older exporters fail closed; never bypass this for historical refs.
+          if ! node decklogic/bots/export-kit.mjs --dest kit --check-content > "$RUNNER_TEMP/sdk-contract-check.log" 2>&1; then
+            echo "::error::generated SDK check failed. Reconcile the public payload with the pinned DeckLogic source locally; historical refs need an exporter supporting --check-content. Private diagnostics are not uploaded."
+            exit 1
+          fi
       - id: identity
         run: |
           python3 -B -m unittest discover -s kit/.github -p 'test_release*.py'

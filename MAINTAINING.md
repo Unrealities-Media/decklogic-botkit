@@ -21,6 +21,8 @@ they are never reused as proof that current SDK code has matching binaries.
 - Root `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, and `.cargo`.
 - `bots/protocol` and `docs/research/sim66-hob-drafted-league`, which contain
   conservative coverage of compile-time includes outside those crates.
+- `bots/export-kit.mjs` and `bots/sample/demo`, so private changes to the
+  generated-payload check or its demo inputs trigger reconciliation again.
 - The complete committed public repository tree, including its SDK, demo,
   docs, manifest/export provenance, smoke test, and release workflow.
 
@@ -37,6 +39,18 @@ release candidate. The private simulator embeds build provenance, so identical
 selected source trees built from different private commits need not have
 byte-identical binaries. A reused content identity retains its original build
 commit in its existing manifest; the workflow does not rewrite that history.
+
+Before deciding whether to skip or build, the identity job runs the pinned private exporter's
+`--check-content` against the pinned public checkout. This compares exact
+generated files and their manifest content; an older `source_commit` is allowed
+when the payload still matches. A frontend-only private commit therefore does
+not require a public re-export. Hashing a stale SDK would merely identify its
+stale bytes, so release identity and gameplay smoke do not replace this check.
+The check is read-only and its diagnostics stay in an unuploaded private log.
+Missing exporters or historical exporters without this option fail closed.
+To release an older engine through this workflow, prepare a reviewed private
+revision with the compatible exporter and reconcile its public payload first;
+do not bypass the check. Existing published historical kits remain unchanged.
 
 ## What gets published
 
