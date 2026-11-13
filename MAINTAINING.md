@@ -68,22 +68,33 @@ private source, a token, card pack or shared library:
 ```bash
 python -B -m unittest discover -s examples/python -p test_botlib.py
 python -B -m unittest discover -s .github -p 'test_release*.py'
+cargo build --locked --manifest-path examples/rust/Cargo.toml
+python -B .github/stdio_smoke.py -- examples/rust/target/debug/rust-random-bot
 ```
+
+On Windows append `.exe` to the starter executable path. Rust uses the supported
+stable 1.99.1 toolchain also selected by the release workflow.
 
 The proposed `.github/workflows/checks.yml` runs those commands on pull requests
 and pushes in exactly two hosted jobs: Ubuntu/Python 3.10 (the minimum client
 version) and Windows/Python 3.13 (the supported version used by release smoke).
 It uses read-only repository permissions, persists no checkout credentials,
-uses no secrets or private checkout, and installs no packages beyond setting
-up Python. Git is already supplied by the hosted runners. No API writes or
+uses no secrets or private checkout, and sets up Python and Rust. Cargo fetches
+only the standalone starter dependencies pinned by its lockfile; no Python
+packages are installed. Git is already supplied by the hosted runners. No API writes or
 artifact publication occur. Fork contributors use the same public tests.
 
 This lane checks Python botlib/example response contracts against the original
 synthetic transcript, forward compatibility and question helpers, plus release
 identity, archive/payload hashing, metadata completeness and promotion policy
-with temporary local fixtures. It does **not** load a DLL, run a real game,
-compile Rust, measure bot strength/latency, or establish cross-platform engine
-or runtime integration compatibility. The release smoke/integration checks
+with temporary local fixtures. Each job also builds the standalone Rust stdio
+starter with `--locked`. `stdio_smoke.py` pipes only host messages from the
+synthetic transcript, requires one valid ready and a matching decision number
+with an offered action ID per decision, tolerates the fixture unknown message,
+and compares action answers across two runs. It ignores recorded fixture choices
+and limits each process to ten seconds. This batch-pipe smoke does not measure
+per-decision timing or flushing. It does **not** load a DLL, run a real game,
+qualify a bot, measure strength/latency, or establish engine integration compatibility. The release smoke/integration checks
 remain separate. These proposed hosted jobs have not been dispatched in this
 local audit; passing local commands do not establish hosted-runner success.
 

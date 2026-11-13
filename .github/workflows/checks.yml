@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   python:
-    name: Python ${{ matrix.python }} (${{ matrix.os }})
+    name: Public clients (${{ matrix.os }}, Python ${{ matrix.python }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
@@ -23,8 +23,10 @@ jobs:
           # Minimum client version; newer supported version matches release smoke.
           - os: ubuntu-latest
             python: "3.10"
+            starter: examples/rust/target/debug/rust-random-bot
           - os: windows-latest
             python: "3.13"
+            starter: examples/rust/target/debug/rust-random-bot.exe
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -36,3 +38,10 @@ jobs:
         run: python -B -m unittest discover -s examples/python -p test_botlib.py
       - name: Pure release helpers (temporary local Git fixtures)
         run: python -B -m unittest discover -s .github -p 'test_release*.py'
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # same pin as release workflow
+        with:
+          toolchain: "1.99.1" # supported stable toolchain used by release builds
+      - name: Build standalone Rust starter
+        run: cargo build --locked --manifest-path examples/rust/Cargo.toml
+      - name: Synthetic Rust stdio smoke (not host qualification)
+        run: python -B .github/stdio_smoke.py -- "${{ matrix.starter }}"
