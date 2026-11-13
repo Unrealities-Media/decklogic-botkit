@@ -33,7 +33,7 @@ something new within days.
 | Which cards exist, their ids and their printed text | **Changes** with every pack | Cards are added, and a pre-release card's provisional id is replaced by its real Arena id at release |
 | How a card plays (rules fidelity) | **Changes.** A fix can make a card do more, less or something else | Anything. Read the release notes for your pack |
 | `label` on an action | **Unstable.** Debug text | Anything, at any engine build |
-| Engine strength, Deep's play, reference scores | **Changes** | Results compare only within one engine version and pack checksum |
+| Engine strength, Deep's play, reference scores | **Changes** | Compare the same engine, pack checksum, ordered deck cohort and evaluation settings; retain host/kit identity, bot versions, seed schedule, sample size, faults and caps |
 
 ## Rules for a bot that keeps working
 
@@ -52,9 +52,14 @@ something new within days.
    not id, and treat a missing entry as unknown.
 4. **Don't hard-code the deck or the format.** `game_start.deck` is your deck
    for this game. Packs and sets change.
-5. **Record the version pair.** Log `hello.engine`, `hello.abi` and
-   `hello.cards.pack_checksum` with every result. A score means something only
-   next to them.
+5. **Record the evaluation context.** Keep `hello.engine`, `hello.abi`,
+   `hello.cards.pack_checksum`, host/kit identity, bot versions, ordered deck
+   cohort/hash, evaluation settings, seed schedule, sample size, faults and
+   caps. Published v213 leaves validation's nested pack checksum empty: retain
+   the exported card sheet or match hello plus a pack-file SHA-256; see the
+   [guide workaround](GUIDE.md). The local next-kit host fixes that field.
+   A tiny sample can have zero empirical standard error without establishing
+   certainty or equal strength. Demo scores are execution evidence only.
 6. **Re-validate on every engine update.** Run `botkit validate` against the
    new host. The checks run in seconds.
 

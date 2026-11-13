@@ -47,8 +47,11 @@ own knowledge of the opponent. Any engine player label (`heuristic-v3`,
 
 ## Looking ahead
 
-`dls_game_sample` and `dls_game_clone` arrive in the first release after
-`sim-engine-v213`; the clients raise a clear error on an older library.
+`dls_game_sample` and `dls_game_clone` are optional capabilities. Check the
+downloaded kit's manifest and exported functions; a newer kit can retain the
+same engine stamp without adding either function. The clients raise a clear
+error when the loaded library lacks them. The original `sim-engine-v213`
+release has neither capability.
 
 A search bot tries actions and plays them out. Do that on a **sample**, never
 on the game you are playing: a copy of the real game knows the opponent's hand

@@ -6,6 +6,11 @@ language works. The machine-readable form is [`decklogic-bot-1.schema.json`](dec
 `botkit match --protocol-log FILE` records a real exchange
 (`>` host to bot, `<` bot to host).
 
+[`synthetic-transcript.txt`](synthetic-transcript.txt) is a hand-authored public
+client fixture with invented IDs and unknown future messages/questions/actions.
+It checks offered-ID responses without private data; it is not a recorded legal
+game or rules-accuracy proof. Its short deck is deliberately not a playable deck.
+
 ## Messages
 
 | Direction | `type` | Fields | Meaning |
@@ -45,6 +50,9 @@ opponent's hand or for either library; this is enforced by the type the host
 serializes and is checked by a canary test on every decision of a full game.
 `deck` in `game_start` is your own list, never the opponent's.
 
+The [observation-field dictionary](OBSERVATIONS.md) defines current
+power/toughness, marked damage, blocking references and battlefield age.
+
 Two fields sit beside the `SeatView` fields:
 
 - `decision_objects`: objects the current decision names that are in none of
@@ -72,7 +80,7 @@ The answer is always one of `actions`; the question tells you how to read them.
 | `kind` | Asked when | Fields | Typical actions |
 |---|---|---|---|
 | `mulligan` | Before the game, per hand | `taken` (mulligans so far) | `keep`, `mulligan` |
-| `bottom` | After a mulligan | `count` (cards still to bottom) | `bottom` |
+| `bottom` | After a mulligan | `count` (cards still to bottom) | `put_on_bottom` |
 | `priority` | You may act | `window` (below) | `pass`, `play_land`, `cast`, `activate`, ... |
 | `declare_attackers` | Your combat, one attacker at a time | | `add_attacker`, `done_attacking` |
 | `attack_tax` | An attack tax applies to your attack | | a payable attack subset |

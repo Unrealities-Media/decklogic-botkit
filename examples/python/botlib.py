@@ -1,6 +1,6 @@
 """The Python client for `decklogic-bot/1` bots.
 
-Copy this file next to your bot, or install it (`pip install bots/examples/python`)
+Copy this file next to your bot, or install it (`pip install examples/python`)
 and `import botlib`. Standard library only.
 
     import botlib
@@ -21,7 +21,7 @@ is also there raw (`decision.raw`, `action.raw`), and the older signature
 `choose(self, observation, question, actions)` still works for bots written
 before the client.
 
-**The engine grows every week** (`bots/COMPATIBILITY.md`). New action kinds,
+**The engine grows every week** (`COMPATIBILITY.md` at the repository root). New action kinds,
 new fields and new cards will appear. This client never raises on an unknown
 one: an unknown kind is just a `kind` string you have no rule for, an unknown
 card is `None` from `cards.of`, an unknown question is just a

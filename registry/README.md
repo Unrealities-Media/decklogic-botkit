@@ -5,6 +5,9 @@ Each accepted entry is a directory: your source, a `manifest.json`, and the
 (`--registry registry`), re-checks every receipt, and refuses an entry
 whose source no longer hashes to what was validated.
 
+The commands below distinguish published v213 from local next-kit changes.
+No next-kit release has been published as part of this audit.
+
 ## manifest.json
 
 ```json
@@ -32,9 +35,43 @@ whose source no longer hashes to what was validated.
 ## Accepting an entry
 
 1. Read the source (`../SECURITY.md`: reviewed source only).
-2. `botkit register --pack ... --decks ... --dir registry/<name>-<version>`.
-3. Commit the directory including `receipt.json`. Any later edit to a source
-   file invalidates the receipt; register again under a new version.
+2. With **published v213**, copy reviewed source into a staging directory
+   outside the active registry, then run
+   `botkit register --pack ... --decks ... --dir staging/<name>-<version>`.
+   Move only a passing entry into the active registry. Bare `verify --dir ...`
+   checks source integrity/acceptance; manually revalidate when the engine,
+   pack, decks or evaluation context changes.
+3. Retain the directory and receipt under the maintainer's review process.
+   Changed code or model weights need a new bot version. Requalification of
+   unchanged source does not; archive its prior receipt outside the entry.
+
+**Local next-kit host (unpublished):**
+
+```bash
+botkit import --source incoming/my-bot --registry registry --pack pack.json.gz --decks decks.json
+botkit verify --dir registry/my-bot-1 --pack pack.json.gz --decks decks.json
+```
+
+Import discards submitted receipts, stages a copy outside tournament discovery,
+and validates before admitting it. Existing entries are not replaced. Failed
+copies remain in the reported `.botkit-pending-*` directory for diagnosis.
+Links/non-regular files are refused. Dependencies must already be deliberately
+installed; import runs no installers, build scripts or model downloads.
+
+Next-kit contextual verification and registry admission check engine/ABI,
+pack, ordered decks, qualification policy and evaluation settings, including
+handshake/decision limits, game configuration, card-sheet hash and probe mode.
+`register`, `import` and contextual `verify` accept `--decision-timeout-ms`;
+use the same intended budget for qualification and tournament play. Bare
+`verify --dir ...` remains source verification only. Legacy receipts require
+requalification before next-kit registry play.
+
+Keep logs and reports outside the entry. Package required distributable assets
+alongside source, outside excluded cache directories (`.venv`, `node_modules`,
+`target`, bytecode and `.git`). Installed runtimes/dependencies are reviewed
+separately and are not attested by the source receipt.
+Empty directories are not copied by next-kit import. Create required empty
+working directories at runtime and keep writable logs/reports outside the entry.
 
 `receipt.json` records the manifest, the SHA-256 of every source file (sorted
 paths and bytes, excluding the receipt, build output and bytecode), the engine

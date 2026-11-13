@@ -1,0 +1,12 @@
+> {"type":"hello","protocol":"decklogic-bot/1","engine":"synthetic-client-fixture","abi":0,"cards":{"schema":"decklogic-cards/1","pack_checksum":"synthetic-not-a-pack","cards":[{"grp_ids":[1],"name":"Fixture land","is_land":true,"mana_value":0},{"grp_ids":[2],"name":"Fixture creature","is_creature":true,"mana_value":2}],"keyword_bits":[]},"limits":{"decision_ms":5000,"handshake_ms":20000}}
+< {"type":"ready","protocol":"decklogic-bot/1","name":"fixture","version":"1"}
+> {"type":"game_start","game":0,"seat":0,"on_play":true,"seed":19,"deck":[1,1,2,2]}
+> {"type":"decision","n":0,"observation":{"seat":0,"hand":[{"id":10,"grp_id":1,"is_land":true},{"id":11,"grp_id":1,"is_land":true},{"id":12,"grp_id":2,"is_creature":true,"power":2,"toughness":2,"mana_value":2}],"board":[],"you":{"life":20},"opponent":{"life":20}},"question":{"kind":"mulligan","taken":0},"actions":[{"id":0,"label":"Fixture keep","action":{"action":"keep"}},{"id":1,"label":"Fixture mulligan","action":{"action":"mulligan"}}]}
+< {"type":"action","n":0,"id":0}
+> {"type":"decision","n":3,"observation":{"seat":0,"hand":[{"id":10,"grp_id":1,"is_land":true},{"id":12,"grp_id":2,"is_creature":true,"power":2,"toughness":2,"mana_value":2}],"board":[],"you":{"life":20},"opponent":{"life":20}},"question":{"kind":"priority","window":"precombat_main"},"actions":[{"id":0,"label":"Fixture pass","action":{"action":"pass"}},{"id":1,"label":"Fixture land","action":{"action":"play_land","card":10}}]}
+< {"type":"action","n":3,"id":1}
+> {"type":"future_optional_message","example":true}
+> {"type":"decision","n":8,"observation":{"seat":0,"hand":[],"board":[],"you":{"life":20},"opponent":{"life":20},"future_field":{}},"question":{"kind":"future_question","window":"future_window"},"actions":[{"id":0,"label":"Unstable text","action":{"action":"future_action","future_target":{"kind":"future"}}}]}
+< {"type":"action","n":8,"id":0}
+> {"type":"game_end","result":"draw"}
+> {"type":"bye"}

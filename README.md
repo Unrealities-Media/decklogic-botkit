@@ -5,7 +5,7 @@ DeckLogic's bots offline, with scores that come with error bars.
 
 This repository holds what an outside bot builder needs and nothing else:
 
-- **Releases**: the prebuilt `botkit` host and the simulator library for each
+- **[Releases](https://github.com/Unrealities-Media/decklogic-botkit/releases/latest)**: the prebuilt `botkit` host and the simulator library for each
   platform, each with a checksum and the engine it was built from.
 - **[`protocol/`](protocol/PROTOCOL.md)**: the bot protocol, `decklogic-bot/1`,
   with its JSON Schema and the recorded lists of action kinds, question kinds
@@ -18,9 +18,11 @@ This repository holds what an outside bot builder needs and nothing else:
 - **[`simlib/`](simlib/README.md)**: the simulator as a shared library with a C
   header and a Rust wrapper, for training loops that need games in-process.
 
-The simulator's source and the card packs are not here. A pack (`sim_*.json.gz`)
-is the card data a game is played with; packs are derived from Arena and are
-shared privately for now. Ask the DeckLogic maintainers for one.
+Start with the included [original synthetic demo](sample/demo/README.md):
+it supports real games and bot validation without private data. It is not a
+Magic set or a strength benchmark. For real sets, follow the
+[public pack download instructions](PACKS.md). The
+simulator source is not included here.
 
 **New here? Start with [`GUIDE.md`](GUIDE.md)**: a first bot in five minutes,
 then playing ours, writing one, submitting it and running a tournament.
@@ -40,7 +42,7 @@ botkit --help
 ```
 
 `botkit cards --pack sim_TRK.json.gz --out cards.json` writes the card sheet,
-and `botkit decks --pack sim_TRK.json.gz` the decks the pack ships.
+and `botkit decks --pack sim_TRK.json.gz --out decks.json` the decks the pack ships.
 
 **In-process (training).** Load `decklogic_simlib` (`.dll`, `.so` or `.dylib`)
 and call it from C, Rust, Python or anything with a C interface. A decision is
@@ -57,12 +59,19 @@ the same JSON the stdio protocol sends. See [`simlib/README.md`](simlib/README.m
 
 ## Versions
 
-Each release names the engine it was built from (`sim-engine-vN`, ABI N). The
+Each release records its engine stamp and ABI separately: published
+`sim-engine-v213` has ABI `212`. The
 engine changes often, about twice a day in November 2026, as cards and rules
 are added. The protocol only grows within `decklogic-bot/1`: new fields and
-kinds appear, and nothing is renamed or removed. Scores compare only within
-one engine version and one pack. Read [`COMPATIBILITY.md`](COMPATIBILITY.md)
+kinds appear, and nothing is renamed or removed. Compare scores with the
+same engine, pack, ordered deck cohort and evaluation settings; retain the
+host/kit identity, seed schedule and faults/caps too. Read [`COMPATIBILITY.md`](COMPATIBILITY.md)
 before you write much.
+
+The staged-import and contextual-qualification changes described in
+[`MAINTAINING.md`](MAINTAINING.md) are local next-kit work, not features of the
+published v213 host. Use the documentation packaged with your release and
+`botkit --help` to identify its supported commands.
 
 ## Licence
 

@@ -1,0 +1,612 @@
+{
+  "pack_format_version": 76,
+  "set_code": "DEMO",
+  "corpus_version": "original-synthetic-demo-v1",
+  "min_engine_version": 212,
+  "pre_release": false,
+  "cards": [
+    {
+      "grp_id": 4245684224,
+      "name": "Demo: Quiet Dynamo Plot",
+      "legendary": false,
+      "min_blockers": 1,
+      "cost": {
+        "generic": 0,
+        "colored": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hybrid": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "x": 0
+      },
+      "types": [
+        "land"
+      ],
+      "subtypes": [],
+      "colors": [],
+      "power": 0,
+      "toughness": 0,
+      "characteristic_pt": null,
+      "keywords": 0,
+      "ward": [],
+      "attach_filter": null,
+      "additional_cost": [],
+      "additional_cost_options": [],
+      "kicker_cost": [],
+      "kicked_enters_with_plus_counters": 0,
+      "flashback_cost": null,
+      "cast_cost_reduction": null,
+      "layout": {
+        "layout": "normal"
+      },
+      "abilities": [
+        {
+          "trigger": null,
+          "cost": [
+            {
+              "pay": "tap"
+            }
+          ],
+          "activation_zone": "battlefield",
+          "ops": [
+            {
+              "op": "mana_ability",
+              "colors": [
+                "colorless"
+              ],
+              "amount": {
+                "amount": "literal",
+                "value": 1
+              },
+              "same_color": false,
+              "restriction": "unrestricted"
+            }
+          ],
+          "modes": [],
+          "condition": {
+            "when": "always"
+          },
+          "sorcery_only": false,
+          "once_each_turn": false,
+          "activation_cost_reduction": null,
+          "label": ""
+        }
+      ]
+    },
+    {
+      "grp_id": 4245684225,
+      "name": "Demo: Copper Pebblewalker",
+      "legendary": false,
+      "min_blockers": 1,
+      "cost": {
+        "generic": 1,
+        "colored": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hybrid": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "x": 0
+      },
+      "types": [
+        "creature"
+      ],
+      "subtypes": [],
+      "colors": [],
+      "power": 2,
+      "toughness": 1,
+      "characteristic_pt": null,
+      "keywords": 0,
+      "ward": [],
+      "attach_filter": null,
+      "additional_cost": [],
+      "additional_cost_options": [],
+      "kicker_cost": [],
+      "kicked_enters_with_plus_counters": 0,
+      "flashback_cost": null,
+      "cast_cost_reduction": null,
+      "layout": {
+        "layout": "normal"
+      },
+      "abilities": []
+    },
+    {
+      "grp_id": 4245684226,
+      "name": "Demo: Copper Ridgewalker",
+      "legendary": false,
+      "min_blockers": 1,
+      "cost": {
+        "generic": 2,
+        "colored": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hybrid": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "x": 0
+      },
+      "types": [
+        "creature"
+      ],
+      "subtypes": [],
+      "colors": [],
+      "power": 3,
+      "toughness": 2,
+      "characteristic_pt": null,
+      "keywords": 0,
+      "ward": [],
+      "attach_filter": null,
+      "additional_cost": [],
+      "additional_cost_options": [],
+      "kicker_cost": [],
+      "kicked_enters_with_plus_counters": 0,
+      "flashback_cost": null,
+      "cast_cost_reduction": null,
+      "layout": {
+        "layout": "normal"
+      },
+      "abilities": []
+    },
+    {
+      "grp_id": 4245684227,
+      "name": "Demo: Copper Archwalker",
+      "legendary": false,
+      "min_blockers": 1,
+      "cost": {
+        "generic": 3,
+        "colored": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hybrid": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "x": 0
+      },
+      "types": [
+        "creature"
+      ],
+      "subtypes": [],
+      "colors": [],
+      "power": 4,
+      "toughness": 2,
+      "characteristic_pt": null,
+      "keywords": 0,
+      "ward": [],
+      "attach_filter": null,
+      "additional_cost": [],
+      "additional_cost_options": [],
+      "kicker_cost": [],
+      "kicked_enters_with_plus_counters": 0,
+      "flashback_cost": null,
+      "cast_cost_reduction": null,
+      "layout": {
+        "layout": "normal"
+      },
+      "abilities": []
+    },
+    {
+      "grp_id": 4245684228,
+      "name": "Demo: Copper Towerwalker",
+      "legendary": false,
+      "min_blockers": 1,
+      "cost": {
+        "generic": 4,
+        "colored": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hybrid": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "x": 0
+      },
+      "types": [
+        "creature"
+      ],
+      "subtypes": [],
+      "colors": [],
+      "power": 5,
+      "toughness": 3,
+      "characteristic_pt": null,
+      "keywords": 0,
+      "ward": [],
+      "attach_filter": null,
+      "additional_cost": [],
+      "additional_cost_options": [],
+      "kicker_cost": [],
+      "kicked_enters_with_plus_counters": 0,
+      "flashback_cost": null,
+      "cast_cost_reduction": null,
+      "layout": {
+        "layout": "normal"
+      },
+      "abilities": []
+    },
+    {
+      "grp_id": 4245684229,
+      "name": "Demo: Indigo Pebblecarrier",
+      "legendary": false,
+      "min_blockers": 1,
+      "cost": {
+        "generic": 1,
+        "colored": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hybrid": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "x": 0
+      },
+      "types": [
+        "creature"
+      ],
+      "subtypes": [],
+      "colors": [],
+      "power": 1,
+      "toughness": 2,
+      "characteristic_pt": null,
+      "keywords": 0,
+      "ward": [],
+      "attach_filter": null,
+      "additional_cost": [],
+      "additional_cost_options": [],
+      "kicker_cost": [],
+      "kicked_enters_with_plus_counters": 0,
+      "flashback_cost": null,
+      "cast_cost_reduction": null,
+      "layout": {
+        "layout": "normal"
+      },
+      "abilities": []
+    },
+    {
+      "grp_id": 4245684230,
+      "name": "Demo: Indigo Ridgecarrier",
+      "legendary": false,
+      "min_blockers": 1,
+      "cost": {
+        "generic": 2,
+        "colored": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hybrid": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "x": 0
+      },
+      "types": [
+        "creature"
+      ],
+      "subtypes": [],
+      "colors": [],
+      "power": 3,
+      "toughness": 1,
+      "characteristic_pt": null,
+      "keywords": 0,
+      "ward": [],
+      "attach_filter": null,
+      "additional_cost": [],
+      "additional_cost_options": [],
+      "kicker_cost": [],
+      "kicked_enters_with_plus_counters": 0,
+      "flashback_cost": null,
+      "cast_cost_reduction": null,
+      "layout": {
+        "layout": "normal"
+      },
+      "abilities": []
+    },
+    {
+      "grp_id": 4245684231,
+      "name": "Demo: Indigo Archcarrier",
+      "legendary": false,
+      "min_blockers": 1,
+      "cost": {
+        "generic": 3,
+        "colored": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hybrid": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "x": 0
+      },
+      "types": [
+        "creature"
+      ],
+      "subtypes": [],
+      "colors": [],
+      "power": 4,
+      "toughness": 3,
+      "characteristic_pt": null,
+      "keywords": 0,
+      "ward": [],
+      "attach_filter": null,
+      "additional_cost": [],
+      "additional_cost_options": [],
+      "kicker_cost": [],
+      "kicked_enters_with_plus_counters": 0,
+      "flashback_cost": null,
+      "cast_cost_reduction": null,
+      "layout": {
+        "layout": "normal"
+      },
+      "abilities": []
+    },
+    {
+      "grp_id": 4245684232,
+      "name": "Demo: Indigo Towercarrier",
+      "legendary": false,
+      "min_blockers": 1,
+      "cost": {
+        "generic": 4,
+        "colored": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hybrid": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "x": 0
+      },
+      "types": [
+        "creature"
+      ],
+      "subtypes": [],
+      "colors": [],
+      "power": 6,
+      "toughness": 2,
+      "characteristic_pt": null,
+      "keywords": 0,
+      "ward": [],
+      "attach_filter": null,
+      "additional_cost": [],
+      "additional_cost_options": [],
+      "kicker_cost": [],
+      "kicked_enters_with_plus_counters": 0,
+      "flashback_cost": null,
+      "cast_cost_reduction": null,
+      "layout": {
+        "layout": "normal"
+      },
+      "abilities": []
+    }
+  ],
+  "tokens": [],
+  "basic_lands": [],
+  "unmodeled": [],
+  "coverage": {
+    "modeled": 9,
+    "unmodeled": 0,
+    "modeled_common_uncommon": 0,
+    "unmodeled_common_uncommon": 0,
+    "fidelity_percent": null,
+    "fidelity_sample_events": null,
+    "fidelity_gaps": [],
+    "notes": [
+      "Entirely original synthetic onboarding fixture; no Arena, Scryfall, mined decks or printed card text. Not a Magic set, fidelity measurement or bot-strength benchmark."
+    ]
+  },
+  "trophy_decks": [
+    {
+      "label": "Synthetic demo — Copper",
+      "main": [
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684225,
+        4245684225,
+        4245684225,
+        4245684225,
+        4245684225,
+        4245684225,
+        4245684226,
+        4245684226,
+        4245684226,
+        4245684226,
+        4245684226,
+        4245684226,
+        4245684227,
+        4245684227,
+        4245684227,
+        4245684227,
+        4245684227,
+        4245684227,
+        4245684228,
+        4245684228,
+        4245684228,
+        4245684228,
+        4245684228
+      ],
+      "colors": ""
+    },
+    {
+      "label": "Synthetic demo — Indigo",
+      "main": [
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684224,
+        4245684229,
+        4245684229,
+        4245684229,
+        4245684229,
+        4245684229,
+        4245684229,
+        4245684230,
+        4245684230,
+        4245684230,
+        4245684230,
+        4245684230,
+        4245684230,
+        4245684231,
+        4245684231,
+        4245684231,
+        4245684231,
+        4245684231,
+        4245684231,
+        4245684232,
+        4245684232,
+        4245684232,
+        4245684232,
+        4245684232
+      ],
+      "colors": ""
+    }
+  ],
+  "trophy_pool_kind": "curated",
+  "trophy_attribution": "Original synthetic demo decks authored for SDK onboarding; not mined or tournament decks.",
+  "checksum": "102220bd5d596760ab2f78136a529f74dcfe2d5bf203ed0a1b07340828a1c1ef"
+}

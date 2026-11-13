@@ -1,0 +1,38 @@
+name: Public contributor checks
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python ${{ matrix.python }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Minimum client version; newer supported version matches release smoke.
+          - os: ubuntu-latest
+            python: "3.10"
+          - os: windows-latest
+            python: "3.13"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Synthetic protocol and Python client contracts
+        run: python -B -m unittest discover -s examples/python -p test_botlib.py
+      - name: Pure release helpers (temporary local Git fixtures)
+        run: python -B -m unittest discover -s .github -p 'test_release*.py'
