@@ -96,6 +96,8 @@ next-kit candidate rejects whole command-line arguments naming existing files
 in excluded paths, or relative files outside the submission, during register,
 import and verify. It does not parse inline code, module names, option values
 or dynamically loaded assets. Separately installed runtimes remain allowed.
+Existing files inside the submission must use relative paths, so imports run
+the copied payload instead of an absolute path back to its original directory.
 Published v213 does not include this guard.
 Empty directories are not copied by next-kit import. Create required empty
 working directories at runtime and keep writable logs/reports outside the entry.
