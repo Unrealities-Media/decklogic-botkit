@@ -1,5 +1,5 @@
 # decklogic-bot/1 action kinds: `kind field field ...`, one per line.
-# Checked by DeckLogic's contract tests. Removing or renaming
+# Checked by src-tauri/botkit/tests/action_contract.rs. Removing or renaming
 # an entry is a breaking protocol change; adding one is allowed.
 activate ability equip_alt mode payment source targets x
 activate_granted granted mode payment source targets x

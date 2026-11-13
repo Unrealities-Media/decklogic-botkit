@@ -43,5 +43,7 @@ jobs:
           toolchain: "1.99.1" # supported stable toolchain used by release builds
       - name: Build standalone Rust starter
         run: cargo build --locked --manifest-path examples/rust/Cargo.toml
+      - name: Compile Rust library client contracts (no engine required)
+        run: cargo test --locked --no-run --manifest-path simlib/rust/Cargo.toml
       - name: Synthetic Rust stdio smoke (not host qualification)
         run: python -B .github/stdio_smoke.py -- "${{ matrix.starter }}"

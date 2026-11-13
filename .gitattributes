@@ -1,0 +1,5 @@
+# Generated payload hashes identify exact LF bytes on every checkout platform.
+/protocol/* text eol=lf
+/sample/demo/* text eol=lf
+/simlib/include/decklogic_simlib_core.h text eol=lf
+/kit-payload.json text eol=lf

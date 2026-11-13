@@ -107,15 +107,20 @@ one bounded game with the required original DEMO pack. Missing optional
 exports are supported; a missing core export, missing demo, or broken demo
 fails the check.
 
-Before archiving, the candidate workflow also runs the packaged Python library
-client tests against that platform's newly built library and packaged DEMO.
+Before archiving, the candidate workflow also runs packaged Python and Rust
+library client tests against that platform's newly built library and packaged DEMO.
 This covers single-agent and self-play environments, trace recording and core
 wrapper behavior. Optional lookahead tests skip when their exports are absent;
 the capability manifest still records those absences. Bytecode generation is
 disabled for the test process and its children so tests do not alter the
 already-hashed SDK payload. Locally, the public suite passed 11 tests with two
 optional-export skips against the published Windows v213 library and DEMO;
-this does not establish hosted-platform success.
+this does not establish hosted-platform success. The Rust suite reported four
+passing tests plus its compiling documentation example; one of those four
+returned early because clone is absent, so this does not validate lookahead.
+Rust build products go outside the package, and a local packaged rehearsal
+verified that the SDK file hashes did not change. Public contributor CI compiles
+the Rust library tests without requiring private engine access.
 
 Once deployed, the workflow runs daily or on explicit dispatch. It requires a successful
 paginated GitHub API release listing before deciding that a kit tag is absent;
@@ -146,10 +151,30 @@ have not been dispatched as part of this local audit.
 
 ## Ownership and handoffs
 
-Assign these roles when integrating a change. Exporter success does not replace
-public documentation review: the allow-list exports clients, contract
-inventories, header, demo and synthetic transcript, but not README, GUIDE,
-SECURITY, COMPATIBILITY, registry README or prose protocol/library guides.
+Assign these roles when integrating a change. This public repository owns
+handwritten clients, starters, optional C API declarations, documentation and
+release workflows. DeckLogic owns the engine contracts, core C API, original
+DEMO and synthetic transcript; its exporter updates only those inputs.
+
+The public main C header includes the exported core header and declares optional
+extensions separately. Declarations never imply that a library implements an
+optional function: use capability checks and retain absence guards. Private
+client copies are regression fixtures, not inputs to public releases. Make
+client changes here and run public CI plus packaged-client checks. If private
+tests need a newer client, adopt a reviewed public revision explicitly rather
+than synchronizing both directories in both directions.
+
+From a private DeckLogic checkout, inspect the export before updating it:
+
+```powershell
+node bots/export-kit.mjs --dest ../decklogic-botkit --check
+node bots/export-kit.mjs --dest ../decklogic-botkit --write
+node bots/export-kit.mjs --dest ../decklogic-botkit --check
+```
+
+These commands are local only. The generated-payload manifest hashes
+exported files; the release manifest additionally hashes the complete packaged
+SDK. Exporter success does not replace public documentation or client review.
 
 | Trigger / owner | Checklist | Recovery |
 |---|---|---|
@@ -157,7 +182,8 @@ SECURITY, COMPATIBILITY, registry README or prose protocol/library guides.
 | Reviewed entry / intake maintainer | Follow the version-specific staging path; validate the exact copy; with next-kit, verify current pack/decks/settings before registry play | Keep failed `.botkit-pending-*` copies outside active registry; inspect receipt/errors; existing entries are not replaced |
 | Engine, pack, cohort or evaluation settings change / intake maintainer | Retain old artifacts/receipt; requalify unchanged source in a new workspace; use the intended decision timeout | Preserve old qualified environment; keep failures out of new registry; change bot version only when code/weights change |
 | Rules or contract change / engine and SDK owners | Run relevant owner/contract checks; decide compatibility explicitly; update inventories and author notes | Do not bless removed fields or changed meanings as additive updates |
-| SDK/header/demo change / exporter owner | Check allow-listed export, reconcile newer destination capabilities, inspect exact payload hashes and relevant client/demo checks | Preserve public-only progress; regenerate demo from its original recipe, without private card data |
+| Core contract/header/demo change / engine owner | Check allow-listed export, inspect exact payload hashes and relevant contract/demo checks | Refuse removed core functions until engine revisions or an explicit ABI migration agree; regenerate DEMO without private card data |
+| Client/starter/optional declaration change / public SDK owner | Edit this repository; run client CI and packaged-client checks against supported libraries | Preserve absence guards and document the first supporting kit; never infer binary capability from declarations |
 | Host behavior or public prose change / public docs owner | Update affected guides together; name the first supporting kit and optional capabilities; retain old-release instructions where needed | Correct contradictions before release; HEAD documentation must not imply old binaries gained new features |
 | Release candidate / release maintainer | Review and commit both snapshots; inspect all public tracked files for private data; update identity inputs for new build dependencies/includes; pin both SHAs | Dirty work is not a release candidate; stop before packaging unexpected private files |
 | Authorized release / operator | Check identity, all platform builds, required exports, header/SDK hashes, DEMO smoke and version-pinned links; report optional absence honestly | API/auth errors stop; reproduce private build failures locally at pinned SHA without public source logs |

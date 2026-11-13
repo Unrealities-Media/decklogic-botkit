@@ -1,5 +1,5 @@
 # decklogic-bot/1 observation fields: `Struct field field ...`, one per line.
-# Checked by DeckLogic's contract tests. Removing or
+# Checked by src-tauri/botkit/tests/observation_contract.rs. Removing or
 # renaming a field is a breaking protocol change; adding one is allowed.
 SeatSummary face_down_exile_count graveyard_count hand_count lands_played library_count life mulligans seat
 SeatView active board hand on_play opponent revealed seat stack step turn you

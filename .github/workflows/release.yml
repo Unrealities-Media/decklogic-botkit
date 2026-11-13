@@ -194,6 +194,15 @@ jobs:
           DECKLOGIC_SIMLIB_PACK: ${{ steps.package.outputs.dir }}/sdk/sample/demo/sim_DEMO.json
           PYTHONDONTWRITEBYTECODE: "1"
         run: python -B -m unittest discover -s "$DIR/sdk/simlib/python" -p 'test_*.py' -v
+      - name: Packaged Rust library client contracts
+        shell: bash
+        env:
+          DIR: ${{ steps.package.outputs.dir }}
+          DECKLOGIC_SIMLIB_DIR: ${{ steps.package.outputs.dir }}
+          DECKLOGIC_SIMLIB_PACK: ${{ steps.package.outputs.dir }}/sdk/sample/demo/sim_DEMO.json
+          # Build products must not change the already-hashed SDK archive.
+          CARGO_TARGET_DIR: ${{ runner.temp }}/packaged-rust-client
+        run: cargo test --locked --manifest-path "$DIR/sdk/simlib/rust/Cargo.toml" -- --nocapture
       - name: Archive
         shell: bash
         env:

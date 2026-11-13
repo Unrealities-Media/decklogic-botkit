@@ -1,5 +1,5 @@
 # decklogic-bot/1 questions and values: `group/variant field field ...`, one per line.
-# Checked by DeckLogic's contract tests; shapes in PROTOCOL.md.
+# Checked by src-tauri/botkit/tests/question_contract.rs; shapes in PROTOCOL.md.
 # Removing or renaming an entry is a breaking protocol change; adding one is allowed.
 attack_defender/permanent
 attack_defender/player

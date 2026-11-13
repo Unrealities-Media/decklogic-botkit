@@ -20,6 +20,19 @@ def symbols(path):
     return set(re.findall(r"\bdls_[a-z_]+(?=\s*\()", path.read_text(encoding="utf-8")))
 
 
+def sdk_symbols(include):
+    """Read the public facade and its one generated core header explicitly."""
+    facade = include / "decklogic_simlib.h"
+    core = include / "decklogic_simlib_core.h"
+    for path in (facade, core):
+        if path.is_symlink() or not path.is_file():
+            raise RuntimeError("SDK headers must be regular files")
+    includes = re.findall(r'^\s*#\s*include\s+"([^"]+)"', facade.read_text(encoding="utf-8"), re.M)
+    if includes != [core.name]:
+        raise RuntimeError("SDK facade must include exactly the generated core header")
+    return symbols(core), symbols(facade)
+
+
 def payload_hashes(directory):
     """Hash exact packaged bytes; the digest covers sorted relative paths too."""
     if directory.is_symlink() or not directory.is_dir():
@@ -58,9 +71,12 @@ def check(directory, sdk, library_name, expected_engine, expected_abi):
     assert info["protocol"] == "decklogic-bot/1", "protocol mismatch"
     assert info["library"] == "decklogic-simlib/1", "library interface mismatch"
     packaged = symbols(directory / "decklogic_simlib.h")
-    client = symbols(sdk / "simlib/include/decklogic_simlib.h")
+    client_core, extensions = sdk_symbols(sdk / "simlib/include")
+    client = client_core | extensions
     assert CORE <= packaged and CORE <= client, "core header declaration missing"
-    required = (packaged | client | CORE) - OPTIONAL
+    # Declared core exports are always required, including any later promotion
+    # of a formerly optional function. Only public extensions can be optional.
+    required = packaged | client_core | CORE | (extensions - OPTIONAL)
     available = {name: getattr(lib._dll, name, None) is not None for name in sorted(required | OPTIONAL)}
     missing = [name for name in sorted(required) if not available[name]]
     assert not missing, "required library exports missing: " + ", ".join(missing)
