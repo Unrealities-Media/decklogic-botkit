@@ -87,6 +87,16 @@ Keep logs and reports outside the entry. Package required distributable assets
 alongside source, outside excluded cache directories (`.venv`, `node_modules`,
 `target`, bytecode and `.git`). Installed runtimes/dependencies are reviewed
 separately and are not attested by the source receipt.
+This applies to every bot-owned script, executable, model, weight and required
+data file, not only a compiled binary. `__pycache__`, `*.pyc` and every nested
+file named `receipt.json` are excluded too. Reserve those locations for caches
+and host evidence. In-place registration is not a workaround for import's
+payload exclusions; review all required runtime inputs explicitly. The local
+next-kit candidate rejects whole command-line arguments naming existing files
+in excluded paths, or relative files outside the submission, during register,
+import and verify. It does not parse inline code, module names, option values
+or dynamically loaded assets. Separately installed runtimes remain allowed.
+Published v213 does not include this guard.
 Empty directories are not copied by next-kit import. Create required empty
 working directories at runtime and keep writable logs/reports outside the entry.
 Import and archival change the entry's parent and absolute path. Resolve
