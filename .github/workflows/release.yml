@@ -1,10 +1,10 @@
-# Builds and publishes a bot kit release whenever DeckLogic's engine changes.
+# Builds a content-addressed kit release independently of the engine stamp.
 #
-# Once a day (and on demand) it reads DeckLogic's engine stamp. If this
-# repository has no release for that stamp yet, it builds botkit and the
+# Once a day (and on demand) it hashes pinned build inputs and the public SDK.
+# If this repository has no release for that kit identity, it builds botkit and the
 # simulator library on Linux, Windows and macOS from private DeckLogic, smoke
-# tests each build, and publishes a release named after the stamp with every
-# archive and SHA256SUMS. If the release exists it stops after the check.
+# tests each build, and publishes engine-plus-kit-digest releases with every
+# archive and SHA256SUMS. Only a complete published release skips the build.
 #
 # Cost: this repository is public, so GitHub's hosted runners are free. It
 # never runs on DeckLogic's self-hosted runner, which is registered to DeckLogic
@@ -31,6 +31,11 @@ on:
         description: "DeckLogic branch, tag or commit to build"
         default: main
         required: true
+      promote_latest:
+        description: "Explicitly promote this manual build to Latest (including historical refs)"
+        type: boolean
+        default: false
+        required: true
 
 permissions:
   contents: read
@@ -44,46 +49,71 @@ env:
 
 jobs:
   check:
-    name: Engine stamp
+    name: Kit identity
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      # Draft listings require push access; this job performs only API reads.
+      contents: write
     outputs:
-      engine: ${{ steps.stamp.outputs.engine }}
-      abi: ${{ steps.stamp.outputs.abi }}
-      sha: ${{ steps.stamp.outputs.sha }}
+      engine: ${{ steps.identity.outputs.engine }}
+      abi: ${{ steps.identity.outputs.abi }}
+      sha: ${{ steps.identity.outputs.private_commit }}
+      public_sha: ${{ steps.identity.outputs.public_commit }}
+      tag: ${{ steps.identity.outputs.tag }}
+      digest: ${{ steps.identity.outputs.kit_sha256 }}
       build: ${{ steps.exists.outputs.build }}
+      latest: ${{ steps.exists.outputs.latest }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: kit
+          persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: Unrealities-Media/decklogic
           ref: ${{ env.DECKLOGIC_REF }}
           token: ${{ secrets.DECKLOGIC_READ_TOKEN }}
           path: decklogic
-          sparse-checkout: src-tauri/sim/src/version.rs
+          # Identity uses Git trees; materialize only generated-payload inputs.
+          sparse-checkout: |
+            src-tauri/sim/src/version.rs
+            src-tauri/simlib/include/decklogic_simlib.h
+            bots/export-kit.mjs
+            bots/protocol
+            bots/sample/demo
           sparse-checkout-cone-mode: false
           persist-credentials: false
-      - id: stamp
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      - name: Check generated SDK against pinned source (output kept private)
+        shell: bash
         run: |
-          v=decklogic/src-tauri/sim/src/version.rs
-          engine=$(grep -oP 'pub const ENGINE_VERSION: &str = "\K[^"]+' "$v")
-          abi=$(grep -oP 'pub const ENGINE_ABI: u32 = \K[0-9]+' "$v")
-          test -n "$engine" && test -n "$abi" || { echo "::error::no engine stamp in version.rs"; exit 1; }
-          echo "engine=$engine" >> "$GITHUB_OUTPUT"
-          echo "abi=$abi" >> "$GITHUB_OUTPUT"
-          echo "sha=$(git -C decklogic rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          echo "DeckLogic $(git -C decklogic rev-parse --short=12 HEAD): $engine, ABI $abi"
+          # Content comparison permits older export provenance when bytes match.
+          # Missing/older exporters fail closed; never bypass this for historical refs.
+          if ! node decklogic/bots/export-kit.mjs --dest kit --check-content > "$RUNNER_TEMP/sdk-contract-check.log" 2>&1; then
+            echo "::error::generated SDK check failed. Reconcile the public payload with the pinned DeckLogic source locally; historical refs need an exporter supporting --check-content. Private diagnostics are not uploaded."
+            exit 1
+          fi
+      - id: identity
+        run: |
+          python3 -B -m unittest discover -s kit/.github -p 'test_release*.py'
+          python3 kit/.github/release_identity.py --private decklogic --public kit \
+            --out release-identity.json --github-output "$GITHUB_OUTPUT"
       - id: exists
         env:
           GH_TOKEN: ${{ github.token }}
-          ENGINE: ${{ steps.stamp.outputs.engine }}
+          TAG: ${{ steps.identity.outputs.tag }}
+          RELEASE_EVENT: ${{ github.event_name }}
+          PROMOTE_LATEST: ${{ inputs.promote_latest && 'true' || 'false' }}
         run: |
-          # A release is never replaced: to rebuild one, delete it on GitHub.
-          if gh release view "$ENGINE" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            echo "release $ENGINE exists; nothing to do"
-            echo "build=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "build=true" >> "$GITHUB_OUTPUT"
-          fi
+          # Auth/network/API errors stop the job; only a successful list proves absence.
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100" > releases.json
+          python3 kit/.github/release_state.py --metadata releases.json --tag "$TAG" \
+            --event "$RELEASE_EVENT" --private-ref "$DECKLOGIC_REF" \
+            --promote-latest "$PROMOTE_LATEST" --github-output "$GITHUB_OUTPUT"
 
   build:
     name: Build (${{ matrix.os }})
@@ -112,6 +142,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: kit
+          ref: ${{ needs.check.outputs.public_sha }}
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -134,16 +165,25 @@ jobs:
             exit 1
           fi
           test -f "target/release/${{ matrix.lib }}" || { echo "::error::no ${{ matrix.lib }}"; exit 1; }
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
       - name: Package
         id: package
         shell: bash
         env:
-          ENGINE: ${{ needs.check.outputs.engine }}
+          TAG: ${{ needs.check.outputs.tag }}
+          KIT_DIGEST: ${{ needs.check.outputs.digest }}
         run: |
-          name="decklogic-botkit-$ENGINE-${{ matrix.os }}"
+          name="decklogic-botkit-$TAG-${{ matrix.os }}"
           mkdir -p "dist/$name"
           cp "decklogic/target/release/${{ matrix.exe }}" "decklogic/target/release/${{ matrix.lib }}" \
              decklogic/src-tauri/simlib/include/decklogic_simlib.h kit/LICENSE "dist/$name/"
+          # Package the exact public snapshot, never private engine source.
+          mkdir -p "dist/$name/sdk"
+          git -C kit archive "${{ needs.check.outputs.public_sha }}" | tar -x -C "dist/$name/sdk"
+          python kit/.github/release_identity.py --private decklogic --public kit --out "dist/$name/release-manifest.json"
+          python -c 'import json,os; from pathlib import Path; p=next(Path("dist").glob("*/release-manifest.json")); assert json.loads(p.read_text())["kit_sha256"] == os.environ["KIT_DIGEST"]'
           if [ "$RUNNER_OS" != Windows ]; then
             strip "dist/$name/${{ matrix.exe }}" 2>/dev/null || true
           fi
@@ -152,9 +192,6 @@ jobs:
           if [ "$RUNNER_OS" = Windows ]; then dir=$(cygpath -w "$dir"); fi
           echo "dir=$dir" >> "$GITHUB_OUTPUT"
           echo "name=$name" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: "3.13"
       - name: Smoke test
         shell: bash
         env:
@@ -162,9 +199,27 @@ jobs:
           LIB: ${{ matrix.lib }}
           ENGINE: ${{ needs.check.outputs.engine }}
           ABI: ${{ needs.check.outputs.abi }}
+          PLATFORM: ${{ matrix.os }}
         run: |
           "$DIR/${{ matrix.exe }}" --help > /dev/null
           python kit/.github/smoke.py
+      - name: Packaged Python library client contracts
+        shell: bash
+        env:
+          DIR: ${{ steps.package.outputs.dir }}
+          DECKLOGIC_SIMLIB_DIR: ${{ steps.package.outputs.dir }}
+          DECKLOGIC_SIMLIB_PACK: ${{ steps.package.outputs.dir }}/sdk/sample/demo/sim_DEMO.json
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python -B -m unittest discover -s "$DIR/sdk/simlib/python" -p 'test_*.py' -v
+      - name: Packaged Rust library client contracts
+        shell: bash
+        env:
+          DIR: ${{ steps.package.outputs.dir }}
+          DECKLOGIC_SIMLIB_DIR: ${{ steps.package.outputs.dir }}
+          DECKLOGIC_SIMLIB_PACK: ${{ steps.package.outputs.dir }}/sdk/sample/demo/sim_DEMO.json
+          # Build products must not change the already-hashed SDK archive.
+          CARGO_TARGET_DIR: ${{ runner.temp }}/packaged-rust-client
+        run: cargo test --locked --manifest-path "$DIR/sdk/simlib/rust/Cargo.toml" -- --nocapture
       - name: Archive
         shell: bash
         env:
@@ -196,6 +251,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ needs.check.outputs.public_sha }}
           persist-credentials: false
       - name: Collect the archives
         env:
@@ -207,12 +263,19 @@ jobs:
           ENGINE: ${{ needs.check.outputs.engine }}
           ABI: ${{ needs.check.outputs.abi }}
           SHA: ${{ needs.check.outputs.sha }}
+          PUBLIC_SHA: ${{ needs.check.outputs.public_sha }}
+          MAKE_LATEST: ${{ needs.check.outputs.latest }}
+          TAG: ${{ needs.check.outputs.tag }}
+          KIT_DIGEST: ${{ needs.check.outputs.digest }}
         run: |
           mkdir dist && find dist-in -type f \( -name '*.tar.gz' -o -name '*.zip' \) -exec mv {} dist/ \;
           test "$(ls dist | wc -l)" -eq 3 || { ls -R dist-in; echo "::error::expected three archives"; exit 1; }
+          python3 .github/release_identity.py --collect dist --tag "$TAG" --out dist/release-manifest.json
+          python3 -c 'import json,os; m=json.load(open("dist/release-manifest.json")); assert m["kit_sha256"] == os.environ["KIT_DIGEST"]'
           (cd dist && sha256sum * > SHA256SUMS && cat SHA256SUMS)
           {
             echo "Built automatically from DeckLogic \`${SHA::12}\` with Rust 1.99.1."
+            echo "Public SDK commit: \`$PUBLIC_SHA\`. Kit SHA256: \`$KIT_DIGEST\`."
             echo
             echo "| | |"
             echo "|---|---|"
@@ -221,13 +284,15 @@ jobs:
             echo "| Library interface | \`decklogic-simlib/1\` |"
             echo "| Platforms | Linux x86_64 (glibc 2.35+), Windows x86_64, macOS arm64 |"
             echo
-            echo "Each archive holds \`botkit\`, the simulator library, \`decklogic_simlib.h\` and the licence."
-            echo "Start with [GUIDE.md](https://github.com/$GITHUB_REPOSITORY/blob/main/GUIDE.md). Scores compare only within one engine version and one pack;"
-            echo "card packs are not in the release."
+            echo "Each archive holds the host, library, header, licence, release manifest and matching public SDK/docs in \`sdk/\`."
+            echo "Start with [GUIDE.md](https://github.com/$GITHUB_REPOSITORY/blob/$PUBLIC_SHA/GUIDE.md). Scores compare only within one engine version and one pack."
+            echo "Archives include only the original synthetic DEMO pack; see [PACKS.md](https://github.com/$GITHUB_REPOSITORY/blob/$PUBLIC_SHA/PACKS.md) for the separate public real-set pack feed."
+            echo "Core library functions were checked. Optional capabilities below are measured, not inferred from the engine stamp:"
+            python3 -c 'import json; m=json.load(open("dist/release-manifest.json")); [print(a["platform"] + ": " + ", ".join(k + "=" + ("available" if v else "unavailable") for k,v in a["capabilities"]["optional"].items()) + "; demo=" + a["demo"]["status"]) for a in m["artifacts"]]'
             echo
             echo '```'
             cat dist/SHA256SUMS
             echo '```'
           } > notes.md
-          gh release create "$ENGINE" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "decklogic-botkit $ENGINE" --notes-file notes.md --latest
+          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --target "$PUBLIC_SHA" \
+            --title "decklogic-botkit $TAG" --notes-file notes.md --latest="$MAKE_LATEST"

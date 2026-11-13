@@ -16,33 +16,64 @@ bot has to ignore what it does not know, and the host checks that it does.
 Training a learner and need millions of games in-process? The simulator also
 ships as a shared library speaking the same messages: [`simlib/`](simlib/README.md).
 
-> The simulator's source and the card packs are not in this repository. Packs
-> are derived from Arena and shared privately: ask the DeckLogic maintainers.
+> Start with the included [original demo pack](sample/demo/README.md). It needs
+> no private assets and exercises the bot protocol with simple invented cards.
+> Real-set packs are available from the [public pack feed](PACKS.md).
+> The simulator source is not needed to download or use them.
 
 ## 1. Try it (5 minutes)
 
-Download the release for your platform, unpack it, and put `botkit` on your
-`PATH`. With a pack (`sim_HOB.json.gz` here), write its decks and check an
+Download the [release for your platform](https://github.com/Unrealities-Media/decklogic-botkit/releases/latest), unpack it, and put `botkit` on your
+`PATH`. From this repository's root, use the included demo pack to check an
 example bot (Python 3.10+):
 
 ```bash
-botkit decks --pack sim_HOB.json.gz --out decks.json
-botkit validate --pack sim_HOB.json.gz --decks decks.json \
+botkit decks --pack sample/demo/sim_DEMO.json --out decks.json
+botkit validate --pack sample/demo/sim_DEMO.json --decks decks.json \
   --bot "ext:python3 random_bot.py" --cwd examples/python
 ```
+
+On Windows, run these PowerShell commands from this repository's root after
+unpacking the Windows archive there. Use the extracted directory name for
+your release; this example uses `sim-engine-v213`.
+
+```powershell
+$botkit = '.\decklogic-botkit-sim-engine-v213-windows-x86_64\botkit.exe'
+python --version
+& $botkit decks --pack sample/demo/sim_DEMO.json --out decks.json
+& $botkit validate --pack sample/demo/sim_DEMO.json --decks decks.json --bot "ext:python random_bot.py" --cwd examples/python
+```
+
+If your Python command is `py` or `python3`, substitute it in both commands.
+PowerShell needs `& $botkit` to run the executable path stored in the variable;
+the examples elsewhere in this guide use Bash line continuations (`\`).
 
 It plays 20 games against `random-v1` and requires zero illegal actions,
 timeouts or crashes, then checks latency, determinism and forward
 compatibility.
 
+**Published v213 report limitation:** validation's nested
+`match_report.pack_checksum` is empty. Retain a separately exported card sheet
+(`botkit cards --pack sample/demo/sim_DEMO.json --out cards.json`) and its
+`pack_checksum`, or the same field in `hello.cards` from a match trace. Also
+record the pack file's SHA-256 (PowerShell:
+`Get-FileHash -Algorithm SHA256 sample/demo/sim_DEMO.json`). The file hash and semantic pack checksum are
+different identities; keep both. The local next-kit host fixes this report
+field, but that fix is not in published v213.
+
+The runnable examples below continue with the demo. For real-set evaluation,
+follow [PACKS.md](PACKS.md) and export the pack's matching decks first. Demo scores
+measure protocol operation, not strength at Magic.
+
 ### Know your cards
 
-Observations name cards by Arena id. The host sends the card sheet for the
+Observations name cards by `grp_id` (Arena ids for real packs; invented local
+ids for the demo). The host sends the card sheet for the
 pack in play (name, cost, colours, types, power/toughness, keywords, rules
 text, what each activated ability costs, and any castable second face) in `hello.cards`; `botlib.py` keeps it as `self.cards`. To browse it:
 
 ```bash
-botkit cards --pack sim_HOB.json.gz --out cards.json
+botkit cards --pack sample/demo/sim_DEMO.json --out cards.json
 ```
 
 Read each offered action's structured `action` field (`action.kind` in `botlib`),
@@ -53,9 +84,9 @@ Both are described in [`protocol/PROTOCOL.md`](protocol/PROTOCOL.md).
 
 ```bash
 botkit match \
-  --pack sim_HOB.json.gz --decks decks.json \
-  --a "ext:python3 my_bot.py" --cwd path/to/my/bot \
-  --b deep --pairs 50 --seed 1 --protocol-log trace.jsonl
+  --pack sample/demo/sim_DEMO.json --decks decks.json \
+  --a "ext:python3 simple_bot.py" --cwd examples/python \
+  --b beginner --pairs 2 --seed 7 --protocol-log trace.jsonl
 ```
 
 `--a` and `--b` take `random-v1`, `beginner`, `quick`, `deep`, or
@@ -71,6 +102,13 @@ decision latency (p50, p99, max), every game (`games`: both decks, your seat,
 whether you were on the play, your result) and your record by deck
 (`by_deck`: when you played it, and when the opponent did).
 
+The two-pair demo command is an execution check, not a strength comparison.
+Identical scores in a few pairs can produce **zero empirical standard error**
+(for example, two pair scores of 0.5 give `0.500 +/- 0.000`). That does not
+establish certainty or equal playing strength. Compare real evaluations with
+the same engine, pack, ordered decks and evaluation settings, and record
+host/kit identity, bot versions, seeds, sample size, faults and caps.
+
 **`--protocol-log FILE` is the best way to learn the game.** It writes every
 message to and from the `--a` bot, one JSON line each way (`>` host to bot,
 `<` bot to host), so you can see exactly which questions and actions arrive
@@ -85,7 +123,7 @@ is silently not there. Pass tuning parameters as arguments instead:
 
 | Bot | What it is |
 |---|---|
-| `random-v1` | Uniformly random legal actions. Any working bot beats it |
+| `random-v1` | Uniformly random legal actions. A baseline; legal play alone does not guarantee beating it |
 | `beginner` | A one-step heuristic with a small look-ahead over public information |
 | `quick` | A stronger heuristic that also uses activated abilities well |
 | `deep` | The strongest: a heuristic player that checks for lethal and for the opponent's best replies by sampling hands the opponent could hold, drawn from the format's card pool (never its real hand). The report names it by its player version, for example `heuristic-resolve-lethal-...-v25` |
@@ -94,7 +132,10 @@ Reference scores on the HOB sample decks (`sim-engine-v213`): the Python
 example (`simple_bot.py`) scores 0.19 against `deep` and 0.88 against
 `random-v1` (50 pairs, seed 1). A newcomer's one-hour heuristic reached about
 0.32 against `deep`, 0.49 against `quick` and 0.66 against `beginner`.
-Scores compare only within one engine version and pack checksum.
+These historical reference scores are specific to their cohorts. Compare runs
+only with the same engine, pack checksum, ordered deck cohort and evaluation
+settings; retain host/kit identity, bot versions, seed schedule, sample size,
+faults and caps. They do not predict scores on the synthetic demo.
 
 ## 3. Write one
 
@@ -107,7 +148,8 @@ Start from an example:
 | [`examples/rust`](examples/rust/) | Rust | only `serde_json`, no simulator dependency |
 
 In Python, [`botlib.py`](examples/python/botlib.py) is the client: copy it
-next to your bot or `pip install examples/python`. Subclass `botlib.Bot`,
+next to your bot with its accompanying `LICENSE`, or `pip install examples/python`.
+Subclass `botlib.Bot`,
 implement `choose(decision)`, and hand an instance to `botlib.run`. This whole
 file is a working bot:
 
@@ -128,8 +170,9 @@ if __name__ == "__main__":
     botlib.run(MyBot())
 ```
 
-It scores 0.075 ± 0.041 against `deep` on the TRK decks (20 pairs, seed 1);
-the examples below do better. What a decision gives you:
+Its historical TRK result was 0.075 ± 0.041 against `deep` (20 pairs, seed 1).
+That reference does not predict demo performance; comparisons require the
+full evaluation context listed above. What a decision gives you:
 
 | You get | What |
 |---|---|
@@ -142,6 +185,10 @@ the examples below do better. What a decision gives you:
 | `self.limits.decision_ms`, `decision.elapsed_ms()` | Your time budget per decision |
 | `self.engine`, `self.abi` | The engine you are playing; log them with your results |
 
+See the [observation-field dictionary](protocol/OBSERVATIONS.md) before using
+combat values: current power/toughness already includes counters and modeled
+modifiers; marked damage is separate.
+
 In any other language, read [`protocol/PROTOCOL.md`](protocol/PROTOCOL.md):
 each decision gives you `observation` (your seat's view), `question` and
 `actions`, and you answer with one action's `id`. Either way, print debugging
@@ -152,7 +199,7 @@ differ.
 Check a bot at any time (the same checks `register` runs, without a submission):
 
 ```bash
-botkit validate --pack sim_HOB.json.gz \
+botkit validate --pack sample/demo/sim_DEMO.json \
   --decks decks.json --bot "ext:python3 my_bot.py" --cwd path/to/my/bot
 ```
 
@@ -162,15 +209,27 @@ A submission is a directory with a `manifest.json` and your source (see
 [`registry/README.md`](registry/README.md)). Check it exactly as we will:
 
 ```bash
-botkit register --pack sim_HOB.json.gz \
+botkit register --pack sample/demo/sim_DEMO.json \
   --decks decks.json --dir registry/my-bot-1
 ```
 
 That runs the handshake, 20 games against `random-v1` (zero faults allowed),
 the latency limit, a determinism check, and the forward-compatibility probe
 (more games with fields, an action kind, a question kind and a window no engine has yet), then writes `receipt.json` binding
-your source hash to the engine stamp and pack. Only accepted, unmodified
-entries can play in a tournament (`botkit verify --dir ...`).
+your source hash to the engine stamp and pack. With published v213,
+`botkit verify --dir ...` checks the accepted receipt and source integrity;
+it does not establish qualification for a new pack or deck cohort. Registry
+entries require accepted receipts. Direct `--entrant ext:...` entries can also
+play and do not carry registry qualification.
+
+The local, unpublished next-kit host adds staged `import`, contextual
+`verify --pack ... --decks ...`, and qualification settings checks. Follow
+[`registry/README.md`](registry/README.md) for the version-specific intake path;
+do not run next-kit commands against v213.
+
+Default validation samples the first ten mirrored deck pairs, not every deck
+or mechanic. Changing the seed changes deals, not the selected deck pairs.
+Treat the result as sampled compatibility for this engine, pack and cohort.
 
 **Until a sandbox exists we accept reviewed source only**: read
 [`SECURITY.md`](SECURITY.md) for exactly what the host does and does not
@@ -179,14 +238,37 @@ isolate.
 ## 5. Tournament
 
 ```bash
-botkit tournament --pack sim_HOB.json.gz \
+botkit tournament --pack sample/demo/sim_DEMO.json \
   --decks decks.json --entrant random-v1 --entrant quick \
   --entrant deep --registry registry --pairs 20 --seed 1 --out out/
 ```
 
-Round-robin over fixed decks with mirrored deals, standings with 95% intervals,
+Round-robin over fixed decks with mirrored deals, standings with approximate intervals,
 a cross table, and a manifest of engine stamp, pack, decks, seeds and entrant
 source hashes.
+
+Intervals use a normal approximation over pair scores, not a calibrated
+small-sample guarantee. One pair or no observed variation can produce numeric
+zero standard errors in raw reports; that is not certainty. The candidate next
+host withholds those intervals in Markdown. Published v213 may still display
+them. Keep faults/caps and full JSON, and use a declared held-out evaluation
+design before treating a ranking as promotion evidence.
+
+`--registry` adds every qualified entry in that directory. `--entrant` adds
+built-in or direct `ext:` opponents; it does not select a registry entry by
+name or directory. Use a dedicated registry for the admitted cohort you want
+to compare, and keep retired or failed entries outside it.
+Keep each registry `name@version` only once in that cohort. The next-host
+candidate refuses duplicate contestant labels before play; two copies of one
+accepted directory must not become indistinguishable ranked opponents.
+
+Freeze the admitted files throughout a comparison. The local next-host
+candidate checks hash-bound source before and after the tournament, refusing
+standings on persistent changes or read failures. Use a fresh output directory
+and retain stderr when a run fails; earlier files are not replaced on failure.
+These endpoint checks do not detect edits restored between checks or attest
+installed dependencies. Direct `ext:` diagnostics have no admitted source hash.
+Published v213 and earlier local archives do not include this follow-up guard.
 
 ## Files
 

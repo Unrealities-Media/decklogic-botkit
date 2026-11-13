@@ -8,14 +8,35 @@ read, or run it inside a throwaway VM or container.**
 
 | Control | How |
 |---|---|
-| One process per game | A crash, hang or garbage costs that bot that game and nothing else; no state carries over |
-| Handshake limit (20 s) and decision limit (5 s, `--decision-timeout-ms`) | The process is killed on expiry and forfeits the game |
-| Hidden information | The bot receives only its seat's `SeatView` and its own deck; the type has no field for the opponent's hand or a library. A canary test checks every decision of a full game |
+| One process per game | Each game starts fresh process memory. Files and other external state can persist between games |
+| Handshake limit (20 s) and decision limit (5 s, `--decision-timeout-ms`) | A reply timeout forfeits the game. Published v213 can still block while writing to a bot that stops reading; see next-kit changes below |
+| Hidden observation fields | The bot receives its seat's `SeatView` and own deck, without the opposing hand or library contents. This alone does not prevent reconstruction from disclosed seeds; see below |
 | Legality | The answer is an index into the offered set; anything else forfeits. A bot cannot construct an illegal move |
-| Scrubbed environment | The child starts with an empty environment plus `PATH`, `SystemRoot`, `TEMP`, `TMP`, `HOME`, `USERPROFILE`, `PYTHONUTF8`; no tokens or credentials are inherited |
+| Scrubbed environment | The child inherits only `PATH`, `SystemRoot`, `TEMP`, `TMP`, `HOME`, `USERPROFILE`, `PYTHONUTF8`. Other environment variables are removed; accessible files and services may still contain credentials |
 | Working directory | Set to the submission directory |
 | No network bots accepted | A manifest with `resources.network = true` is refused |
 | Source integrity | `receipt.json` binds the validated source hash; `botkit verify` and the tournament refuse an entry whose files changed since validation |
+
+## Published v213 and local next-kit changes
+
+The **local, unpublished next-kit host** includes pipe writes in handshake and
+decision deadlines, bounds reply lines to 64 KiB (including newline), and
+bounds queued replies. This does not cap the bot's own memory, kill descendant
+processes, or make logging/filesystem operations interruptible. These changes
+are not present in the downloaded v213 binary.
+
+Published v213 derives the wire bot seed reversibly from the deal seed. With
+known deck arrays, that can reveal hidden opening hands through replay. The
+local next-kit `independent-public-policy-v1` scheme makes policy randomness
+independent of deal seeds. Public/default deal seeds still permit replay.
+Confidential evaluation therefore also requires a held-out high-entropy deal
+seed, frozen submissions and reports/secrets unavailable to running bots.
+Source review and seat-only JSON do not provide that isolation.
+
+Next-kit registry admission also checks the receipt's qualification policy,
+engine/ABI, pack, ordered decks and evaluation settings. Bare `verify --dir`
+is an integrity check; add `--pack` and `--decks` for contextual qualification
+on a supporting host. See [version-specific intake](registry/README.md).
 
 ## Not enforced
 

@@ -1,6 +1,6 @@
-"""Client tests: replay a recorded transcript and a probe-style decision.
+"""Client tests: replay the recorded golden transcript and a probe-style decision.
 
-    python -m unittest test_botlib    (from bots/examples/python)
+    python -m unittest test_botlib    (from examples/python)
 """
 
 import io
@@ -15,15 +15,14 @@ import random_bot
 import simple_bot
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-# DeckLogic's recorded golden transcript is not published yet (it holds a
-# sample deck's card ids); the tests that replay it skip without it.
 GOLDEN = os.path.join(HERE, "..", "..", "protocol", "golden-transcript.txt")
+SYNTHETIC = os.path.join(HERE, "..", "..", "protocol", "synthetic-transcript.txt")
 
 
-def host_lines():
-    if not os.path.exists(GOLDEN):
-        raise unittest.SkipTest("the golden transcript is not in this repository")
-    with open(GOLDEN, encoding="utf-8") as f:
+def host_lines(path=None):
+    # Public distributions carry a hand-authored, data-free fixture. Keep the
+    # private recorded game when available; also test synthetic explicitly below.
+    with open(path or (GOLDEN if os.path.exists(GOLDEN) else SYNTHETIC), encoding="utf-8") as f:
         return [line[2:] for line in f if line.startswith("> ")]
 
 
@@ -35,6 +34,18 @@ def play(bot, lines):
 
 
 class GoldenTranscript(unittest.TestCase):
+    def test_public_synthetic_fixture_answers_every_decision(self):
+        lines = host_lines(SYNTHETIC)
+        decisions = [json.loads(line) for line in lines if json.loads(line)["type"] == "decision"]
+        self.assertGreaterEqual(len(decisions), 3)
+        for bot in (random_bot.RandomBot(), simple_bot.SimpleBot()):
+            replies = play(bot, lines)
+            actions = [reply for reply in replies if reply["type"] == "action"]
+            self.assertEqual(len(actions), len(decisions))
+            for decision, answer in zip(decisions, actions):
+                self.assertEqual(answer["n"], decision["n"])
+                self.assertIn(answer["id"], [action["id"] for action in decision["actions"]])
+
     def test_every_example_answers_every_decision_with_an_offered_id(self):
         lines = host_lines()
         decisions = [json.loads(l) for l in lines if json.loads(l)["type"] == "decision"]
@@ -104,7 +115,12 @@ class ForwardCompatible(unittest.TestCase):
         self.assertEqual(botlib.Decision.counter({"id": 1}, "charge"), 0)
 
     def test_a_host_without_cards_or_limits_still_works(self):
-        lines = [l for l in host_lines()]
+        messages = [json.loads(line) for line in host_lines()]
+        for message in messages:
+            if message.get("type") == "hello":
+                message.pop("cards", None)
+                message.pop("limits", None)
+        lines = [json.dumps(message) for message in messages]
         bot = simple_bot.SimpleBot()
         play(bot, lines)
         self.assertFalse(bot.cards)

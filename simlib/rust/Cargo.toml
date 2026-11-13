@@ -1,6 +1,6 @@
 [package]
 name = "decklogic-simlib-client"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "A safe Rust wrapper over the DeckLogic simulator shared library (decklogic-simlib/1). Loads the prebuilt library at run time; needs no simulator source."
 license = "MIT"

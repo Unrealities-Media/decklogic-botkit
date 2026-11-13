@@ -1,0 +1,12 @@
+{
+  "schema": "decklogic-bot-manifest/1",
+  "name": "rust-random",
+  "version": "1",
+  "author": "DeckLogic public Rust starter",
+  "contact": "Replace with your contact before submitting",
+  "protocol": "decklogic-bot/1",
+  "entry": "./bin/rust-random-bot.exe",
+  "runtime": "Windows x86_64 executable; build with Rust using the retained Cargo.lock; Rust is not required at run time",
+  "license": "MIT",
+  "resources": { "p99_ms": 50, "memory_mb": 100, "network": false }
+}

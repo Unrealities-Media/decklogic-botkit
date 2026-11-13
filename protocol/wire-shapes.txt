@@ -1,7 +1,7 @@
 # decklogic-bot/1 wire shapes: `path type|type`, one per line.
-# Checked by DeckLogic's wire-shape contract test. `[]` is any array element
-# and `<kind>` the variant an object's tag names. A new path is an addition;
-# a new type at a recorded path is a breaking change.
+# Checked by src-tauri/botkit/tests/wire_shape_contract.rs, which explains the
+# path syntax. A new path is an addition; a new type at a recorded path is a
+# breaking change. Regenerate with BOTKIT_BLESS=1 after review.
 decision.actions[].action object
 decision.actions[].action<activate>.ability int
 decision.actions[].action<activate>.action string

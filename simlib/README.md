@@ -5,6 +5,10 @@ imitation, search over rollouts. If you only want to play your bot against
 ours, the [stdio protocol](../README.md) is simpler. Use this when the pipe is
 the bottleneck.
 
+The [learned-bot handoff recipe](../LEARNED_BOTS.md) explains how to turn
+training output into a self-contained stdio submission with model identity
+and deployment checks.
+
 The library is DeckLogic's Limited simulator built as a shared library
 (`decklogic_simlib.dll`, `libdecklogic_simlib.so`, `libdecklogic_simlib.dylib`)
 with a small C interface, [`decklogic_simlib.h`](include/decklogic_simlib.h).
@@ -47,8 +51,11 @@ own knowledge of the opponent. Any engine player label (`heuristic-v3`,
 
 ## Looking ahead
 
-`dls_game_sample` and `dls_game_clone` arrive in the first release after
-`sim-engine-v213`; the clients raise a clear error on an older library.
+`dls_game_sample` and `dls_game_clone` are optional capabilities. Check the
+downloaded kit's manifest and exported functions; a newer kit can retain the
+same engine stamp without adding either function. The clients raise a clear
+error when the loaded library lacks them. The original `sim-engine-v213`
+release has neither capability.
 
 A search bot tries actions and plays them out. Do that on a **sample**, never
 on the game you are playing: a copy of the real game knows the opponent's hand
@@ -103,6 +110,10 @@ match` does). `botkit` hosts only stdio bots.
   A refused `apply` leaves the game as it was.
 - **Threads.** One game per thread at a time. Games on different threads can
   share an engine, and an engine can be freed while its games play on.
+  A built-in bot belongs to the game that created it. Rust client 0.1.1 rejects
+  passing another game to `Bot::choose`, including games from another library
+  load. Create new bots for reset, sampled or cloned games; moving the original
+  game between threads preserves its identity.
 - **Determinism.** A game is a function of its decks, seed, seat on the play
   and the answers given. Same inputs, same game, on every platform.
 - **Versions.** `decklogic-simlib/1` changes only if a function changes
@@ -153,7 +164,12 @@ loop {
 [`python/simlib.py`](python/simlib.py) is a client with no dependencies beyond
 the standard library. Copy it next to your script, or `pip install` the
 `python/` directory, which also installs the environments, the trace recorder
-and a `simlib-traces` command:
+and a `simlib-traces` command.
+
+When copying client files into your own submission, retain the accompanying
+MIT `LICENSE` notice. Installable packages include that notice themselves.
+
+For example:
 
 ```python
 import simlib
@@ -177,14 +193,24 @@ standard library only, in the shapes Gymnasium and PettingZoo loops expect:
 
 | Class | Shape |
 |---|---|
-| `SimlibEnv(engine, opponent="deep")` | One learner seat against a built-in bot: `reset(seed)` gives `(obs, info)`, `step(index)` gives `(obs, reward, terminated, truncated, info)`. Seats alternate game by game unless you pass `seat` |
+| `SimlibEnv(engine, opponent="deep")` | One learner seat against a built-in bot: `reset(seed)` gives `(obs, info)`, `step(index)` gives `(obs, reward, terminated, truncated, info)`. Seats alternate after successful resets unless you pass `seat` |
 | `SimlibAEC(engine)` | Self-play, both seats as agents `seat_0` and `seat_1`: `agent_iter()`, `last()`, `step(index)`, and a final `step(None)` per agent |
+
+Call `reset()` successfully before reading observations or taking steps.
+`close()` and a failed reset invalidate the old episode; a later successful
+reset starts another. A failed reset does not consume an alternating learner
+seat. Cleanup is idempotent, and inactive operations raise a reset-required
+error. These lifecycle guarantees apply to the candidate client source here;
+older archived clients may retain stale observations after close/reset failure.
 
 `obs["decision"]` is the decision message above, and `obs["action_mask"]` marks
 which of `max_actions` (default 128) indices are offered. You answer with an
 index into `decision["actions"]`, so a fixed-size policy head works; every
 offered action is legal. The reward is +1, -1 or 0 at the end of the game from
 the acting seat; a game the engine stops at its turn cap is `truncated`.
+`actions_cut` counts distinct observed decisions whose offer exceeded the mask,
+once per decision. Repeated observation reads and reads by the inactive AEC
+agent do not inflate it. It counts cut decisions, not discarded action entries.
 
 ```python
 import random, simlib, simlib_env

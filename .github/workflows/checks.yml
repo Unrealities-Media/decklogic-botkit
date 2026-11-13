@@ -1,0 +1,70 @@
+name: Public contributor checks
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Public clients (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Minimum client version; newer supported version matches release smoke.
+          - os: ubuntu-latest
+            python: "3.10"
+            starter: examples/rust/target/debug/rust-random-bot
+          - os: windows-latest
+            python: "3.13"
+            starter: examples/rust/target/debug/rust-random-bot.exe
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Synthetic protocol and Python client contracts
+        run: python -B -m unittest discover -s examples/python -p test_botlib.py
+      - name: Pure release helpers (temporary local Git fixtures)
+        run: python -B -m unittest discover -s .github -p 'test_release*.py'
+      - name: Pure Python environment diagnostics (no engine required)
+        run: python -B -m unittest discover -s simlib/python -p 'test_simlib_env_*.py'
+      - name: Build and inspect installable Python packages
+        shell: bash
+        env:
+          WHEELS: ${{ runner.temp }}/python-wheels
+        run: |
+          python -m pip wheel --no-deps --wheel-dir "$WHEELS" ./examples/python ./simlib/python
+          python -B .github/check_python_wheels.py "$WHEELS" LICENSE
+      - name: Public C and C++ header contracts
+        if: runner.os == 'Linux'
+        run: |
+          cc -Wall -Wextra -Werror -fsyntax-only -Isimlib/include .github/header_smoke.c
+          c++ -Wall -Wextra -Werror -fsyntax-only -x c++ -Isimlib/include .github/header_smoke.c
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # same pin as release workflow
+        with:
+          toolchain: "1.99.1" # supported stable toolchain used by release builds
+      - name: Build standalone Rust starter
+        run: cargo build --locked --manifest-path examples/rust/Cargo.toml
+      - name: Compile Rust library client contracts (no engine required)
+        run: cargo test --locked --no-run --manifest-path simlib/rust/Cargo.toml
+      - name: Build and inspect Rust client package
+        shell: bash
+        env:
+          CARGO_TARGET_DIR: ${{ runner.temp }}/rust-client-package
+        run: |
+          cargo package --locked --manifest-path simlib/rust/Cargo.toml
+          python -B .github/check_rust_package.py "$CARGO_TARGET_DIR/package" LICENSE
+      - name: Synthetic Rust stdio smoke (not host qualification)
+        run: python -B .github/stdio_smoke.py -- "${{ matrix.starter }}"

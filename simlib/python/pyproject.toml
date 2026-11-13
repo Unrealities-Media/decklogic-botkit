@@ -4,14 +4,16 @@
 # The library itself is not in the package: point DECKLOGIC_SIMLIB or
 # DECKLOGIC_SIMLIB_DIR at the release's file, or pass its path to Library().
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "decklogic-simlib"
-version = "1.0.0"
+version = "1.0.1"
 description = "ctypes client for the DeckLogic simulator library: games in-process, built-in bots, Gymnasium/PettingZoo-style environments and play traces."
 requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = []
 
 [project.optional-dependencies]
