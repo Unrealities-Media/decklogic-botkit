@@ -146,8 +146,12 @@ lines. Identity inspection outputs only stamps, hashes and path names.
 
 This maintenance change has been checked locally against the public Windows
 v213 DLL: 16 required exports present; sample/clone absent as expected; DEMO
-completed in 258 decisions. The workflow itself and Linux/macOS packaging
-have not been dispatched as part of this local audit.
+completed in 258 decisions. A separate local, network-disabled Linux CI-image
+check built the current host/library offline, passed focused registry/transport
+and public-client checks, and completed packaged DEMO smoke with the same
+capabilities. Reviewed Python and compiled-entry intake also passed there,
+including executable mode preservation. No hosted workflow was dispatched;
+macOS and the declared Python 3.10 minimum remain untested locally.
 
 ## Ownership and handoffs
 
