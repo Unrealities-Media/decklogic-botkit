@@ -26,6 +26,8 @@ simulator source is not included here.
 
 **New here? Start with [`GUIDE.md`](GUIDE.md)**: a first bot in five minutes,
 then playing ours, writing one, submitting it and running a tournament.
+For model-based policies, [LEARNED_BOTS.md](LEARNED_BOTS.md) connects training,
+encoder/weight identity, deterministic inference and submission packaging.
 
 ## Two ways to play
 

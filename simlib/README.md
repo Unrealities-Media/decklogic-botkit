@@ -5,6 +5,10 @@ imitation, search over rollouts. If you only want to play your bot against
 ours, the [stdio protocol](../README.md) is simpler. Use this when the pipe is
 the bottleneck.
 
+The [learned-bot handoff recipe](../LEARNED_BOTS.md) explains how to turn
+training output into a self-contained stdio submission with model identity
+and deployment checks.
+
 The library is DeckLogic's Limited simulator built as a shared library
 (`decklogic_simlib.dll`, `libdecklogic_simlib.so`, `libdecklogic_simlib.dylib`)
 with a small C interface, [`decklogic_simlib.h`](include/decklogic_simlib.h).
