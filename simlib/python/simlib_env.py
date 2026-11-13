@@ -61,16 +61,22 @@ class _Table:
         self._counted_decision: Optional[dict] = None
 
     def new_game(self, seed: int, decks: Optional[tuple]) -> None:
-        if self.game is not None:
-            self.game.close()
-        rng = random.Random(seed)
-        pair = list(decks) if decks is not None else [rng.choice(self.decks), rng.choice(self.decks)]
-        self.game = self.engine.game(pair, seed=seed, on_play=rng.randrange(2), labels=self.labels)
-        self.cut = 0
-        self._counted_decision = None
-        self.decision = self.game.decision()
+        self.close()
+        try:
+            rng = random.Random(seed)
+            pair = list(decks) if decks is not None else [rng.choice(self.decks), rng.choice(self.decks)]
+            self.game = self.engine.game(pair, seed=seed, on_play=rng.randrange(2), labels=self.labels)
+            self.decision = self.game.decision()
+        except Exception:
+            self.close()
+            raise
+
+    def require_active(self) -> None:
+        if self.game is None or self.decision is None:
+            raise RuntimeError("no active episode; call reset() successfully first")
 
     def observation(self) -> dict:
+        self.require_active()
         offered = len(self.decision.get("actions", ())) if self.decision["type"] == "decision" else 0
         if self._counted_decision is not self.decision:
             if offered > self.max_actions:
@@ -80,6 +86,7 @@ class _Table:
         return {"decision": self.decision, "action_mask": [1] * shown + [0] * (self.max_actions - shown)}
 
     def play_index(self, index: int) -> None:
+        self.require_active()
         actions = self.decision["actions"]
         if not 0 <= index < min(len(actions), self.max_actions):
             raise ValueError(f"action index {index} is not offered ({min(len(actions), self.max_actions)} offered)")
@@ -87,12 +94,16 @@ class _Table:
         self.decision = self.game.decision()
 
     def over(self) -> bool:
+        self.require_active()
         return self.decision["type"] == "over"
 
     def close(self) -> None:
-        if self.game is not None:
-            self.game.close()
-            self.game = None
+        game, self.game = self.game, None
+        self.decision = None
+        self.cut = 0
+        self._counted_decision = None
+        if game is not None:
+            game.close()
 
 
 class SimlibEnv:
@@ -121,15 +132,19 @@ class SimlibEnv:
         return self.table.max_actions
 
     def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
+        self.close()
         seed = random.randrange(2**31) if seed is None else seed
         self.seat = self.games % 2 if self.fixed_seat is None else self.fixed_seat
+        try:
+            self.table.new_game(seed, (options or {}).get("decks"))
+            self.opponent = self.table.game.bot(self.opponent_name, 1 - self.seat, seed + 1, knowledge=self.knowledge)
+            self._advance()
+            result = self.table.observation(), self._info()
+        except Exception:
+            self.close()
+            raise
         self.games += 1
-        self.table.new_game(seed, (options or {}).get("decks"))
-        if self.opponent is not None:
-            self.opponent.close()
-        self.opponent = self.table.game.bot(self.opponent_name, 1 - self.seat, seed + 1, knowledge=self.knowledge)
-        self._advance()
-        return self.table.observation(), self._info()
+        return result
 
     def step(self, action: int):
         if self.table.over():
@@ -159,10 +174,12 @@ class SimlibEnv:
         return spaces.Discrete(self.max_actions), spaces.MultiBinary(self.max_actions)
 
     def close(self) -> None:
-        if self.opponent is not None:
-            self.opponent.close()
-            self.opponent = None
-        self.table.close()
+        opponent, self.opponent = self.opponent, None
+        try:
+            if opponent is not None:
+                opponent.close()
+        finally:
+            self.table.close()
 
 
 class SimlibAEC:
@@ -189,15 +206,20 @@ class SimlibAEC:
         self.agent_selection: Optional[str] = None
 
     def reset(self, seed: Optional[int] = None, options: Optional[dict] = None) -> None:
-        seed = random.randrange(2**31) if seed is None else seed
-        self.table.new_game(seed, (options or {}).get("decks"))
-        self.agents = list(self.possible_agents)
-        for name in ("rewards", "_cumulative_rewards"):
-            setattr(self, name, {a: 0.0 for a in self.agents})
-        self.terminations = {a: False for a in self.agents}
-        self.truncations = {a: False for a in self.agents}
-        self.infos = {a: {} for a in self.agents}
-        self._select()
+        self.close()
+        try:
+            seed = random.randrange(2**31) if seed is None else seed
+            self.table.new_game(seed, (options or {}).get("decks"))
+            self.agents = list(self.possible_agents)
+            for name in ("rewards", "_cumulative_rewards"):
+                setattr(self, name, {a: 0.0 for a in self.agents})
+            self.terminations = {a: False for a in self.agents}
+            self.truncations = {a: False for a in self.agents}
+            self.infos = {a: {} for a in self.agents}
+            self._select()
+        except Exception:
+            self.close()
+            raise
 
     def observe(self, agent: str) -> dict:
         if self.table.over() or self.possible_agents.index(agent) == self.table.decision["seat"]:
@@ -206,11 +228,17 @@ class SimlibAEC:
         return {"decision": None, "action_mask": [0] * self.table.max_actions}
 
     def last(self, observe: bool = True):
+        self.table.require_active()
+        if self.agent_selection is None:
+            raise RuntimeError("no active agent; call reset() successfully first")
         agent = self.agent_selection
         return (self.observe(agent) if observe else None, self._cumulative_rewards[agent],
                 self.terminations[agent], self.truncations[agent], self.infos[agent])
 
     def step(self, action: Optional[int]) -> None:
+        self.table.require_active()
+        if self.agent_selection is None:
+            raise RuntimeError("no active agent; call reset() successfully first")
         agent = self.agent_selection
         if self.terminations[agent] or self.truncations[agent]:
             if action is not None:
@@ -245,4 +273,11 @@ class SimlibAEC:
             yield self.agent_selection
 
     def close(self) -> None:
+        self.agents = []
+        self.agent_selection = None
+        self.rewards = {}
+        self._cumulative_rewards = {}
+        self.terminations = {}
+        self.truncations = {}
+        self.infos = {}
         self.table.close()

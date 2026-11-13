@@ -7,6 +7,7 @@ import simlib_env
 class ObservationAccountingTests(unittest.TestCase):
     def test_repeated_and_inactive_reads_do_not_inflate_cut_decisions(self):
         env = simlib_env.SimlibAEC(None, decks=[[1]], max_actions=1)
+        env.table.game = object()  # Explicit live-game stand-in for pure reads.
         env.table.decision = {"type": "decision", "seat": 0,
                               "actions": [{"id": 0}, {"id": 1}]}
         inactive = env.observe("seat_1")

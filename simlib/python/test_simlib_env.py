@@ -74,6 +74,29 @@ class EnvTests(unittest.TestCase):
         self.assertGreater(info["actions_cut"], 0)
         env.close()
 
+    def test_lifecycle_failure_close_and_recovery(self):
+        for cls in (simlib_env.SimlibEnv, simlib_env.SimlibAEC):
+            env = cls(self.engine)
+            env.reset(seed=1)
+            with self.assertRaises(IndexError):
+                env.reset(seed=2, options={"decks": ([],)})
+            with self.assertRaisesRegex(RuntimeError, "reset"):
+                env.step(0)
+            if isinstance(env, simlib_env.SimlibEnv):
+                self.assertEqual(env.games, 1)
+            env.reset(seed=3)
+            env.close()
+            env.close()
+            with self.assertRaisesRegex(RuntimeError, "reset"):
+                env.step(0)
+            if isinstance(env, simlib_env.SimlibAEC):
+                with self.assertRaisesRegex(RuntimeError, "reset"):
+                    env.last()
+                with self.assertRaisesRegex(RuntimeError, "reset"):
+                    env.observe("seat_0")
+            env.reset(seed=4)
+            env.close()
+
     def test_self_play_follows_the_aec_protocol(self):
         env = simlib_env.SimlibAEC(self.engine)
         env.reset(seed=11)
@@ -92,6 +115,11 @@ class EnvTests(unittest.TestCase):
             acted[agent] += 1
             env.step(masked_choice(rng, obs["action_mask"]))
         self.assertEqual(env.agents, [])
+        with self.assertRaisesRegex(RuntimeError, "reset"):
+            env.last()
+        with self.assertRaisesRegex(RuntimeError, "reset"):
+            env.step(None)
+        self.assertEqual(env.observe("seat_0")["decision"]["type"], "over")
         self.assertTrue(all(acted.values()))
         self.assertEqual(sorted(finals), ["seat_0", "seat_1"])
         self.assertEqual(finals["seat_0"], -finals["seat_1"])

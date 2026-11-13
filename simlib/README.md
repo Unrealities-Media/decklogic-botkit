@@ -189,8 +189,15 @@ standard library only, in the shapes Gymnasium and PettingZoo loops expect:
 
 | Class | Shape |
 |---|---|
-| `SimlibEnv(engine, opponent="deep")` | One learner seat against a built-in bot: `reset(seed)` gives `(obs, info)`, `step(index)` gives `(obs, reward, terminated, truncated, info)`. Seats alternate game by game unless you pass `seat` |
+| `SimlibEnv(engine, opponent="deep")` | One learner seat against a built-in bot: `reset(seed)` gives `(obs, info)`, `step(index)` gives `(obs, reward, terminated, truncated, info)`. Seats alternate after successful resets unless you pass `seat` |
 | `SimlibAEC(engine)` | Self-play, both seats as agents `seat_0` and `seat_1`: `agent_iter()`, `last()`, `step(index)`, and a final `step(None)` per agent |
+
+Call `reset()` successfully before reading observations or taking steps.
+`close()` and a failed reset invalidate the old episode; a later successful
+reset starts another. A failed reset does not consume an alternating learner
+seat. Cleanup is idempotent, and inactive operations raise a reset-required
+error. These lifecycle guarantees apply to the candidate client source here;
+older archived clients may retain stale observations after close/reset failure.
 
 `obs["decision"]` is the decision message above, and `obs["action_mask"]` marks
 which of `max_actions` (default 128) indices are offered. You answer with an
