@@ -259,6 +259,14 @@ built-in or direct `ext:` opponents; it does not select a registry entry by
 name or directory. Use a dedicated registry for the admitted cohort you want
 to compare, and keep retired or failed entries outside it.
 
+Freeze the admitted files throughout a comparison. The local next-host
+candidate checks hash-bound source before and after the tournament, refusing
+standings on persistent changes or read failures. Use a fresh output directory
+and retain stderr when a run fails; earlier files are not replaced on failure.
+These endpoint checks do not detect edits restored between checks or attest
+installed dependencies. Direct `ext:` diagnostics have no admitted source hash.
+Published v213 and earlier local archives do not include this follow-up guard.
+
 ## Files
 
 | Path | What |
