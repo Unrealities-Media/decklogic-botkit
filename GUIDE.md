@@ -148,7 +148,8 @@ Start from an example:
 | [`examples/rust`](examples/rust/) | Rust | only `serde_json`, no simulator dependency |
 
 In Python, [`botlib.py`](examples/python/botlib.py) is the client: copy it
-next to your bot or `pip install examples/python`. Subclass `botlib.Bot`,
+next to your bot with its accompanying `LICENSE`, or `pip install examples/python`.
+Subclass `botlib.Bot`,
 implement `choose(decision)`, and hand an instance to `botlib.run`. This whole
 file is a working bot:
 

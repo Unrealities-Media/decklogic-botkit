@@ -43,7 +43,7 @@ import time
 from typing import Any, Iterable, Optional
 
 PROTOCOL = "decklogic-bot/1"
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 
 
 def log(*parts: Any) -> None:

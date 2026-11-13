@@ -160,7 +160,12 @@ loop {
 [`python/simlib.py`](python/simlib.py) is a client with no dependencies beyond
 the standard library. Copy it next to your script, or `pip install` the
 `python/` directory, which also installs the environments, the trace recorder
-and a `simlib-traces` command:
+and a `simlib-traces` command.
+
+When copying client files into your own submission, retain the accompanying
+MIT `LICENSE` notice. Installable packages include that notice themselves.
+
+For example:
 
 ```python
 import simlib

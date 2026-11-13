@@ -40,6 +40,13 @@ jobs:
         run: python -B -m unittest discover -s .github -p 'test_release*.py'
       - name: Pure Python environment accounting (no engine required)
         run: python -B -m unittest discover -s simlib/python -p test_simlib_env_accounting.py
+      - name: Build and inspect installable Python packages
+        shell: bash
+        env:
+          WHEELS: ${{ runner.temp }}/python-wheels
+        run: |
+          python -m pip wheel --no-deps --wheel-dir "$WHEELS" ./examples/python ./simlib/python
+          python -B .github/check_python_wheels.py "$WHEELS" LICENSE
       - name: Public C and C++ header contracts
         if: runner.os == 'Linux'
         run: |

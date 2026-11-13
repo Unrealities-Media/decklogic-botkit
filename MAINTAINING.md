@@ -96,8 +96,29 @@ version) and Windows/Python 3.13 (the supported version used by release smoke).
 It uses read-only repository permissions, persists no checkout credentials,
 uses no secrets or private checkout, and sets up Python and Rust. Cargo fetches
 the standalone starter and library-client dependencies pinned by their respective
-lockfiles; no Python packages are installed. Git is already supplied by the hosted runners. No API writes or
+lockfiles. The Python packaging step builds both local wheels with isolated
+setuptools build dependencies (at least version 77), then checks shipped modules,
+console entry points and exact license text/metadata. It does not install runtime
+dependencies or require a simulator. Git is already supplied by the hosted runners. No API writes or
 artifact publication occur. Fork contributors use the same public tests.
+
+For local packaging verification, run `python -m pip wheel --no-deps --wheel-dir
+WHEEL_DIR ./examples/python ./simlib/python`, then `python -B
+.github/check_python_wheels.py WHEEL_DIR LICENSE`. Use a fresh
+wheel directory. Both package-local `LICENSE` files must match the repository
+license exactly; retain them when distributing a standalone wheel. Installed
+client tests run from outside the source checkout to avoid accidentally importing
+the working tree. The installed simulator client still needs a separately
+retained shared library and compatible pack.
+
+Python client package versions are independent of engine and kit identities.
+Advance the affected package version when its shipped code or package contents
+change; changing only the kit tag does not make pip upgrade a same-version
+wheel. Keep botlib's `__version__` aligned with its package metadata. Test an
+upgrade from the previous wheel as well as a fresh install. The local candidate
+versions are botlib 1.3.1 and simlib 1.0.1; these are unreleased source changes,
+not a PyPI publication. A doc-only kit update need not advance either client.
+Retain exact wheel hashes and the kit/source snapshot in addition to versions.
 
 This lane checks Python botlib/example response contracts against the original
 synthetic transcript, forward compatibility and question helpers, plus release
