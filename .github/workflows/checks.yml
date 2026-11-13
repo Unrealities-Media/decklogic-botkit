@@ -38,6 +38,11 @@ jobs:
         run: python -B -m unittest discover -s examples/python -p test_botlib.py
       - name: Pure release helpers (temporary local Git fixtures)
         run: python -B -m unittest discover -s .github -p 'test_release*.py'
+      - name: Public C and C++ header contracts
+        if: runner.os == 'Linux'
+        run: |
+          cc -Wall -Wextra -Werror -fsyntax-only -Isimlib/include .github/header_smoke.c
+          c++ -Wall -Wextra -Werror -fsyntax-only -x c++ -Isimlib/include .github/header_smoke.c
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # same pin as release workflow
         with:
           toolchain: "1.99.1" # supported stable toolchain used by release builds

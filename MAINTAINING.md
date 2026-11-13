@@ -151,6 +151,11 @@ have not been dispatched as part of this local audit.
 
 ## Ownership and handoffs
 
+Public contributor checks also compile `.github/header_smoke.c` as C and C++
+on the Linux job. This checks the public facade/core include contract without
+linking optional functions or requiring private source. Local MSVC compilation
+and the existing Linux CI image both passed; hosted execution remains unrun.
+
 Assign these roles when integrating a change. This public repository owns
 handwritten clients, starters, optional C API declarations, documentation and
 release workflows. DeckLogic owns the engine contracts, core C API, original
