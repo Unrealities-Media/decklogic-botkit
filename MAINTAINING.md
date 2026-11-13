@@ -107,6 +107,16 @@ one bounded game with the required original DEMO pack. Missing optional
 exports are supported; a missing core export, missing demo, or broken demo
 fails the check.
 
+Before archiving, the candidate workflow also runs the packaged Python library
+client tests against that platform's newly built library and packaged DEMO.
+This covers single-agent and self-play environments, trace recording and core
+wrapper behavior. Optional lookahead tests skip when their exports are absent;
+the capability manifest still records those absences. Bytecode generation is
+disabled for the test process and its children so tests do not alter the
+already-hashed SDK payload. Locally, the public suite passed 11 tests with two
+optional-export skips against the published Windows v213 library and DEMO;
+this does not establish hosted-platform success.
+
 Once deployed, the workflow runs daily or on explicit dispatch. It requires a successful
 paginated GitHub API release listing before deciding that a kit tag is absent;
 authentication, network, and API errors fail closed. The check job requests

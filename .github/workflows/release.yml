@@ -186,6 +186,14 @@ jobs:
         run: |
           "$DIR/${{ matrix.exe }}" --help > /dev/null
           python kit/.github/smoke.py
+      - name: Packaged Python library client contracts
+        shell: bash
+        env:
+          DIR: ${{ steps.package.outputs.dir }}
+          DECKLOGIC_SIMLIB_DIR: ${{ steps.package.outputs.dir }}
+          DECKLOGIC_SIMLIB_PACK: ${{ steps.package.outputs.dir }}/sdk/sample/demo/sim_DEMO.json
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python -B -m unittest discover -s "$DIR/sdk/simlib/python" -p 'test_*.py' -v
       - name: Archive
         shell: bash
         env:
