@@ -258,6 +258,9 @@ design before treating a ranking as promotion evidence.
 built-in or direct `ext:` opponents; it does not select a registry entry by
 name or directory. Use a dedicated registry for the admitted cohort you want
 to compare, and keep retired or failed entries outside it.
+Keep each registry `name@version` only once in that cohort. The next-host
+candidate refuses duplicate contestant labels before play; two copies of one
+accepted directory must not become indistinguishable ranked opponents.
 
 Freeze the admitted files throughout a comparison. The local next-host
 candidate checks hash-bound source before and after the tournament, refusing
