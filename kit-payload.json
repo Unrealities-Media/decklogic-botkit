@@ -1,7 +1,7 @@
 {
   "schema": "decklogic-kit-payload/1",
-  "source_commit": "28f26dd474899998a60db497f3e44a84eb237fb8",
-  "payload_sha256": "1639ae6e0a49671b3327f4feabd5cf2753dbeae9bf76adbe7b21c094e5d3a136",
+  "source_commit": "db39ef783a1bde421e5c7add1db27875bff9c490",
+  "payload_sha256": "9dfe91cecb3f0899050467a03fe220922132b58c089e75afb92ca8ad737abe0f",
   "files": {
     "protocol/decklogic-bot-1.schema.json": "3889c791de89a8fd6b7e3bae073a8742dfab8332f671d826fafe4743b54bb68c",
     "protocol/action-kinds.txt": "593c692f1cb083ba62fe9166a0117e46288064e5c3b03027bc40f4be9522fbf9",
@@ -10,7 +10,7 @@
     "protocol/OBSERVATIONS.md": "9c4c2419b1166556f54f099f7ad7e9ee03cdae015d81751818528fb1a46d4486",
     "protocol/wire-shapes.txt": "645c046e1349c725f7300638fdd99339dec1dfb8c401cc8e72e265e15da525a6",
     "protocol/synthetic-transcript.txt": "555a43591ba123e20cb8da4e8f2bb475135b80f45e4df4d75aa247a147327b9e",
-    "simlib/include/decklogic_simlib_core.h": "ff91ca062293519e2d7d07ec5592f837511a47c9e0d8261ce2e77565f4f73855",
+    "simlib/include/decklogic_simlib_core.h": "d8ccc5da3f9c332b9a12d7d7605a9f5d9f9cebd891ab272fe6c1e3a9b4226015",
     "sample/demo/sim_DEMO.json": "b1fbb40edf7128d0d35a94d9a79b0c25d0a6d5127c2da07a3c26170475407e1d",
     "sample/demo/decks.json": "a0b34bbf291c13332bf3e79099e2c6865fa3b23c1cae5c05130aa9236ff27c7e",
     "sample/demo/README.md": "e2cbc2a10391c3552f70d9255d5bb80071ba987dde358a5569d08a1d48007b56"
