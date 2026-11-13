@@ -38,6 +38,8 @@ jobs:
         run: python -B -m unittest discover -s examples/python -p test_botlib.py
       - name: Pure release helpers (temporary local Git fixtures)
         run: python -B -m unittest discover -s .github -p 'test_release*.py'
+      - name: Pure Python environment accounting (no engine required)
+        run: python -B -m unittest discover -s simlib/python -p test_simlib_env_accounting.py
       - name: Public C and C++ header contracts
         if: runner.os == 'Linux'
         run: |

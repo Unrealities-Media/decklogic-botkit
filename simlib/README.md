@@ -188,6 +188,9 @@ which of `max_actions` (default 128) indices are offered. You answer with an
 index into `decision["actions"]`, so a fixed-size policy head works; every
 offered action is legal. The reward is +1, -1 or 0 at the end of the game from
 the acting seat; a game the engine stops at its turn cap is `truncated`.
+`actions_cut` counts distinct observed decisions whose offer exceeded the mask,
+once per decision. Repeated observation reads and reads by the inactive AEC
+agent do not inflate it. It counts cut decisions, not discarded action entries.
 
 ```python
 import random, simlib, simlib_env

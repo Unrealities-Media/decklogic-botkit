@@ -67,6 +67,7 @@ private source, a token, card pack or shared library:
 
 ```bash
 python -B -m unittest discover -s examples/python -p test_botlib.py
+python -B -m unittest discover -s simlib/python -p test_simlib_env_accounting.py
 python -B -m unittest discover -s .github -p 'test_release*.py'
 cargo build --locked --manifest-path examples/rust/Cargo.toml
 python -B .github/stdio_smoke.py -- examples/rust/target/debug/rust-random-bot

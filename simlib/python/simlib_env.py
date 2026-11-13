@@ -58,6 +58,7 @@ class _Table:
         self.game: Optional["simlib.Game"] = None
         self.decision: Optional[dict] = None
         self.cut = 0
+        self._counted_decision: Optional[dict] = None
 
     def new_game(self, seed: int, decks: Optional[tuple]) -> None:
         if self.game is not None:
@@ -66,12 +67,15 @@ class _Table:
         pair = list(decks) if decks is not None else [rng.choice(self.decks), rng.choice(self.decks)]
         self.game = self.engine.game(pair, seed=seed, on_play=rng.randrange(2), labels=self.labels)
         self.cut = 0
+        self._counted_decision = None
         self.decision = self.game.decision()
 
     def observation(self) -> dict:
         offered = len(self.decision.get("actions", ())) if self.decision["type"] == "decision" else 0
-        if offered > self.max_actions:
-            self.cut += 1
+        if self._counted_decision is not self.decision:
+            if offered > self.max_actions:
+                self.cut += 1
+            self._counted_decision = self.decision
         shown = min(offered, self.max_actions)
         return {"decision": self.decision, "action_mask": [1] * shown + [0] * (self.max_actions - shown)}
 
@@ -196,9 +200,8 @@ class SimlibAEC:
         self._select()
 
     def observe(self, agent: str) -> dict:
-        obs = self.table.observation()
         if self.table.over() or self.possible_agents.index(agent) == self.table.decision["seat"]:
-            return obs
+            return self.table.observation()
         # Not this agent's turn: no decision of its own to show.
         return {"decision": None, "action_mask": [0] * self.table.max_actions}
 
