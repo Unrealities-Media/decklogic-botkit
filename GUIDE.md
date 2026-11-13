@@ -246,6 +246,11 @@ Round-robin over fixed decks with mirrored deals, standings with 95% intervals,
 a cross table, and a manifest of engine stamp, pack, decks, seeds and entrant
 source hashes.
 
+`--registry` adds every qualified entry in that directory. `--entrant` adds
+built-in or direct `ext:` opponents; it does not select a registry entry by
+name or directory. Use a dedicated registry for the admitted cohort you want
+to compare, and keep retired or failed entries outside it.
+
 ## Files
 
 | Path | What |

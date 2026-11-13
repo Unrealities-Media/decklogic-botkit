@@ -34,6 +34,10 @@ No next-kit release has been published as part of this audit.
 
 ## Accepting an entry
 
+For compiled bots, the [Rust starter packaging recipe](../examples/rust/README.md)
+shows how to retain source/lockfile and place the executable outside excluded
+build caches. Its Windows relative-executable recipe requires next-kit.
+
 1. Read the source (`../SECURITY.md`: reviewed source only).
 2. With **published v213**, copy reviewed source into a staging directory
    outside the active registry, then run
