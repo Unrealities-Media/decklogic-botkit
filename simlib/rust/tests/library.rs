@@ -77,6 +77,33 @@ fn errors_carry_the_library_message() {
 }
 
 #[test]
+fn bots_refuse_a_different_game() {
+    let lib = library();
+    let engine = lib.engine(pack()).unwrap();
+    let decks = engine.decks().unwrap();
+    let spec = GameSpec::new([decks[0].main.clone(), decks[1].main.clone()], 1);
+    let mut original = engine.game(&spec).unwrap();
+    let mut other = engine.game(&spec).unwrap();
+    let seat = original.seat().unwrap();
+    let mut bot = original.bot(&BotSpec::new("random", seat, 1)).unwrap();
+    let wrong_game = bot.choose(&mut other);
+    assert!(
+        matches!(&wrong_game, Err(Error::Call(m)) if m.contains("different game")),
+        "{wrong_game:?}"
+    );
+    assert!(bot.choose(&mut original).is_ok());
+    let separately_loaded = library();
+    let separate_engine = separately_loaded.engine(pack()).unwrap();
+    let mut separate_game = separate_engine.game(&spec).unwrap();
+    assert!(
+        matches!(bot.choose(&mut separate_game), Err(Error::Call(m)) if m.contains("different game"))
+    );
+    drop(original);
+    let mut later = engine.game(&spec).unwrap();
+    assert!(matches!(bot.choose(&mut later), Err(Error::Call(m)) if m.contains("different game")));
+}
+
+#[test]
 fn a_game_outlives_its_engine_and_moves_threads() {
     let lib = library();
     let engine = lib.engine(pack()).unwrap();

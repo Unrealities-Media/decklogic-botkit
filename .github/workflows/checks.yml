@@ -59,5 +59,12 @@ jobs:
         run: cargo build --locked --manifest-path examples/rust/Cargo.toml
       - name: Compile Rust library client contracts (no engine required)
         run: cargo test --locked --no-run --manifest-path simlib/rust/Cargo.toml
+      - name: Build and inspect Rust client package
+        shell: bash
+        env:
+          CARGO_TARGET_DIR: ${{ runner.temp }}/rust-client-package
+        run: |
+          cargo package --locked --manifest-path simlib/rust/Cargo.toml
+          python -B .github/check_rust_package.py "$CARGO_TARGET_DIR/package" LICENSE
       - name: Synthetic Rust stdio smoke (not host qualification)
         run: python -B .github/stdio_smoke.py -- "${{ matrix.starter }}"

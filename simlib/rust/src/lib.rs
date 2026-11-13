@@ -46,7 +46,7 @@ pub const FILE_NAME: &str = if cfg!(target_os = "windows") {
 pub enum Error {
     /// The library could not be loaded, or lacks a function.
     Load(String),
-    /// The library refused a call; the text is its `dls_last_error`.
+    /// A call or wrapper precondition was refused. Native failures use `dls_last_error`.
     Call(String),
     /// A message was not the JSON this wrapper expects.
     Json(String),
@@ -379,6 +379,7 @@ impl Engine {
         Ok(Game {
             lib: self.lib.clone(),
             raw,
+            identity: Arc::new(()),
         })
     }
 }
@@ -393,6 +394,9 @@ impl Drop for Engine {
 pub struct Game {
     lib: Library,
     raw: Raw,
+    // Bots retain this identity so a freed game's address cannot be reused
+    // to make a later game appear to be their original owner.
+    identity: Arc<()>,
 }
 
 // SAFETY: a game may move between threads; `&mut self` keeps one user at a time.
@@ -469,6 +473,7 @@ impl Game {
         Ok(Game {
             lib: self.lib.clone(),
             raw,
+            identity: Arc::new(()),
         })
     }
 
@@ -487,6 +492,7 @@ impl Game {
         Ok(Game {
             lib: self.lib.clone(),
             raw,
+            identity: Arc::new(()),
         })
     }
 
@@ -502,6 +508,7 @@ impl Game {
         Ok(Bot {
             lib: self.lib.clone(),
             raw,
+            game_identity: self.identity.clone(),
         })
     }
 }
@@ -516,6 +523,7 @@ impl Drop for Game {
 pub struct Bot {
     lib: Library,
     raw: Raw,
+    game_identity: Arc<()>,
 }
 
 // SAFETY: as `Game`.
@@ -523,7 +531,13 @@ unsafe impl Send for Bot {}
 
 impl Bot {
     /// The bot's pick for `game`'s outstanding decision, not applied.
+    /// Only the game that created this bot is accepted, even after it moves.
     pub fn choose(&mut self, game: &mut Game) -> Result<u32> {
+        if !Arc::ptr_eq(&self.game_identity, &game.identity) {
+            return Err(Error::Call(
+                "bot belongs to a different game; create a bot for this game".into(),
+            ));
+        }
         let id = unsafe { (self.lib.f().bot_choose)(self.raw, game.raw) };
         u32::try_from(id).map_err(|_| self.lib.error())
     }

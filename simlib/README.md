@@ -110,6 +110,10 @@ match` does). `botkit` hosts only stdio bots.
   A refused `apply` leaves the game as it was.
 - **Threads.** One game per thread at a time. Games on different threads can
   share an engine, and an engine can be freed while its games play on.
+  A built-in bot belongs to the game that created it. Rust client 0.1.1 rejects
+  passing another game to `Bot::choose`, including games from another library
+  load. Create new bots for reset, sampled or cloned games; moving the original
+  game between threads preserves its identity.
 - **Determinism.** A game is a function of its decks, seed, seat on the play
   and the answers given. Same inputs, same game, on every platform.
 - **Versions.** `decklogic-simlib/1` changes only if a function changes
