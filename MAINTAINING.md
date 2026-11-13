@@ -166,7 +166,10 @@ check built the current host/library offline, passed focused registry/transport
 and public-client checks, and completed packaged DEMO smoke with the same
 capabilities. Reviewed Python and compiled-entry intake also passed there,
 including executable mode preservation. No hosted workflow was dispatched;
-macOS and the declared Python 3.10 minimum remain untested locally.
+macOS remains untested locally. A later isolated Windows CPython 3.10.20 run
+passed ten protocol tests, twenty release-helper tests and twelve library tests
+with two expected optional-export skips against v213/DEMO. This covers the
+declared minimum on Windows, not every 3.10 patch or the hosted Ubuntu job.
 
 ## Ownership and handoffs
 

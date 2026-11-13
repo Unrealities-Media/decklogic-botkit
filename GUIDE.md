@@ -242,9 +242,16 @@ botkit tournament --pack sample/demo/sim_DEMO.json \
   --entrant deep --registry registry --pairs 20 --seed 1 --out out/
 ```
 
-Round-robin over fixed decks with mirrored deals, standings with 95% intervals,
+Round-robin over fixed decks with mirrored deals, standings with approximate intervals,
 a cross table, and a manifest of engine stamp, pack, decks, seeds and entrant
 source hashes.
+
+Intervals use a normal approximation over pair scores, not a calibrated
+small-sample guarantee. One pair or no observed variation can produce numeric
+zero standard errors in raw reports; that is not certainty. The candidate next
+host withholds those intervals in Markdown. Published v213 may still display
+them. Keep faults/caps and full JSON, and use a declared held-out evaluation
+design before treating a ranking as promotion evidence.
 
 `--registry` adds every qualified entry in that directory. `--entrant` adds
 built-in or direct `ext:` opponents; it does not select a registry entry by
