@@ -49,6 +49,15 @@ build caches. Its Windows relative-executable recipe requires next-kit.
    Changed code or model weights need a new bot version. Requalification of
    unchanged source does not; archive its prior receipt outside the entry.
 
+Retain evaluated bytes, not just a source Git commit. Checkout filters and
+line-ending conversion can change files and invalidate a receipt. Keep a
+byte-preserving archive with its SHA-256 beside the retained host, pack, decks,
+settings and reports; restore it separately and verify before reproduction.
+Unix executables also need permissions preserved by the archive/extraction
+tool: the source hash covers paths and bytes, not permission bits. If using Git
+to store evaluated snapshots, deliberately disable text conversion for that
+snapshot directory outside the payload and verify an actual restored checkout.
+
 **Local next-kit host (unpublished):**
 
 ```bash
