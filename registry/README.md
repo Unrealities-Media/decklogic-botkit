@@ -76,6 +76,18 @@ alongside source, outside excluded cache directories (`.venv`, `node_modules`,
 separately and are not attested by the source receipt.
 Empty directories are not copied by next-kit import. Create required empty
 working directories at runtime and keep writable logs/reports outside the entry.
+Import and archival change the entry's parent and absolute path. Resolve
+bot-owned scripts/models from inside the submission, not an adjacent
+`../shared` directory or a cached staging path. Verification checks integrity
+and qualification context without launching the bot; inspect comparison fault
+counts after moving it. A tournament can exit successfully while reporting
+bot crash forfeits.
+
+An interrupted import may leave a partial `.botkit-pending-*` copy without a
+receipt. Confirm its owning process has stopped, retain available evidence,
+and retry from the original reviewed source. Do not manually move that pending
+copy into the active registry. Archive or remove only the exact abandoned
+directory after confirming ownership; import does no automatic cleanup.
 
 `receipt.json` records the manifest, the SHA-256 of every source file (sorted
 paths and bytes, excluding the receipt, build output and bytecode), the engine
