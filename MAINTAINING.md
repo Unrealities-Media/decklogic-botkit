@@ -80,8 +80,8 @@ and pushes in exactly two hosted jobs: Ubuntu/Python 3.10 (the minimum client
 version) and Windows/Python 3.13 (the supported version used by release smoke).
 It uses read-only repository permissions, persists no checkout credentials,
 uses no secrets or private checkout, and sets up Python and Rust. Cargo fetches
-only the standalone starter dependencies pinned by its lockfile; no Python
-packages are installed. Git is already supplied by the hosted runners. No API writes or
+the standalone starter and library-client dependencies pinned by their respective
+lockfiles; no Python packages are installed. Git is already supplied by the hosted runners. No API writes or
 artifact publication occur. Fork contributors use the same public tests.
 
 This lane checks Python botlib/example response contracts against the original
