@@ -43,6 +43,31 @@ class LibraryTests(unittest.TestCase):
         self.assertGreater(len(first[0]), 20)
         self.assertEqual(first, self.play(3))
 
+    def test_samples_and_copies_look_ahead_from_the_same_decision(self):
+        if getattr(self.lib._dll, "dls_game_sample", None) is None:
+            self.skipTest("this library predates dls_game_sample")
+        game = self.engine.game([self.decks[0]["main"], self.decks[1]["main"]], seed=6, labels=False)
+        bots = [game.bot("random", seat, 6) for seat in (0, 1)]
+        for _ in range(30):
+            game.apply(bots[game.seat()].choose())
+
+        def shown(g):
+            d = g.decision()
+            return d["seat"], d["observation"], d["question"], d["actions"]
+
+        here = shown(game)
+        copy = game.clone()
+        self.assertEqual(shown(copy), here)
+        world = game.sample(4)
+        self.assertEqual(shown(world), here)
+        world.apply(world.decision()["actions"][0]["id"])
+        self.assertEqual(shown(game), here, "the real game is untouched")
+        pool = [card for deck in self.decks for card in deck["main"]]
+        self.assertEqual(shown(game.sample(5, "format-pool-v1", pool)), here)
+        with self.assertRaises(simlib.SimlibError) as refused:
+            game.sample(1, "open-hand")
+        self.assertIn("knowledge", str(refused.exception))
+
     def test_errors_carry_the_library_message(self):
         with self.assertRaises(simlib.SimlibError) as missing:
             self.lib.engine("/no/such/pack.json")

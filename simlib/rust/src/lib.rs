@@ -84,6 +84,9 @@ struct Fns {
     bot_choose: unsafe extern "C" fn(Raw, Raw) -> i64,
     bot_version: unsafe extern "C" fn(Raw) -> *const c_char,
     bot_free: unsafe extern "C" fn(Raw),
+    // Added after the first release: `None` in a library that predates them.
+    game_sample: Option<unsafe extern "C" fn(Raw, *const c_char) -> Raw>,
+    game_clone: Option<unsafe extern "C" fn(Raw) -> Raw>,
 }
 
 /// The loaded library. Cheap to clone; engines, games and bots keep it loaded.
@@ -136,6 +139,35 @@ impl GameSpec {
             deal_model: None,
             labels: true,
         }
+    }
+}
+
+/// `dls_game_sample`'s spec.
+#[derive(Clone, Debug, Serialize)]
+pub struct SampleSpec {
+    pub seed: u64,
+    /// `blind-public-v1` (the default: the acting seat knows only its own
+    /// decklist) or `format-pool-v1` (the opponent's cards come from `pool`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub knowledge: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pool: Option<Vec<u32>>,
+}
+
+impl SampleSpec {
+    pub fn new(seed: u64) -> SampleSpec {
+        SampleSpec {
+            seed,
+            knowledge: None,
+            pool: None,
+        }
+    }
+
+    /// The opponent's cards come from `pool` (grp ids, with repeats for copies).
+    pub fn pool(mut self, pool: Vec<u32>) -> SampleSpec {
+        self.knowledge = Some("format-pool-v1".into());
+        self.pool = Some(pool);
+        self
     }
 }
 
@@ -242,6 +274,9 @@ impl Library {
             bot_choose: sym!("dls_bot_choose"),
             bot_version: sym!("dls_bot_version"),
             bot_free: sym!("dls_bot_free"),
+            // SAFETY: each symbol's type is the header's declaration.
+            game_sample: unsafe { lib.get(b"dls_game_sample\0") }.ok().map(|f| *f),
+            game_clone: unsafe { lib.get(b"dls_game_clone\0") }.ok().map(|f| *f),
         };
         let library = Library {
             inner: Arc::new(Loaded { fns, _lib: lib }),
@@ -412,6 +447,47 @@ impl Game {
             0 => Ok(()),
             _ => Err(self.lib.error()),
         }
+    }
+
+    /// One world the acting seat cannot tell apart from this game, as a new
+    /// game from the same decision: its own view is identical, and the
+    /// opponent's hand, both libraries and future shuffles are sampled from
+    /// what it knows. Look ahead on samples, never on the real game.
+    pub fn sample(&mut self, spec: &SampleSpec) -> Result<Game> {
+        let f = self
+            .lib
+            .f()
+            .game_sample
+            .ok_or_else(|| Error::Load("dls_game_sample: this library predates it".into()))?;
+        let spec =
+            CString::new(serde_json::to_string(spec).map_err(|e| Error::Json(e.to_string()))?)
+                .map_err(|e| Error::Call(e.to_string()))?;
+        let raw = unsafe { f(self.raw, spec.as_ptr()) };
+        if raw.is_null() {
+            return Err(self.lib.error());
+        }
+        Ok(Game {
+            lib: self.lib.clone(),
+            raw,
+        })
+    }
+
+    /// An independent copy in the same state. A copy of a real game knows its
+    /// hidden cards and future draws: copy a [`Game::sample`] to look ahead.
+    pub fn try_clone(&self) -> Result<Game> {
+        let f = self
+            .lib
+            .f()
+            .game_clone
+            .ok_or_else(|| Error::Load("dls_game_clone: this library predates it".into()))?;
+        let raw = unsafe { f(self.raw) };
+        if raw.is_null() {
+            return Err(self.lib.error());
+        }
+        Ok(Game {
+            lib: self.lib.clone(),
+            raw,
+        })
     }
 
     /// Seats a built-in bot in this game.

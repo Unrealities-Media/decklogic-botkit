@@ -62,12 +62,17 @@ class Library:
             "dls_game_apply": ([_P, ctypes.c_uint32], ctypes.c_int32),
             "dls_game_free": ([_P], None),
             "dls_bot_new": ([_P, _S], _P),
+            "dls_game_sample": ([_P, _S], _P),
+            "dls_game_clone": ([_P], _P),
             "dls_bot_choose": ([_P, _P], ctypes.c_int64),
             "dls_bot_version": ([_P], _S),
             "dls_bot_free": ([_P], None),
         }
         for name, (args, res) in sig.items():
-            fn = getattr(self._dll, name)
+            fn = getattr(self._dll, name, None)
+            if fn is None:
+                # A library older than this client: the call raises when used.
+                continue
             fn.argtypes = args
             fn.restype = res
         self.info: dict = json.loads(self._dll.dls_info())
@@ -168,6 +173,38 @@ class Game(_Handle):
     def apply(self, action_id: int) -> None:
         if self._lib._dll.dls_game_apply(self._raw, action_id) != 0:
             raise self._lib._error()
+
+    def _has(self, name: str) -> None:
+        if getattr(self._lib._dll, name, None) is None:
+            raise SimlibError(f"{name} needs a newer library than {self._lib.info.get('engine')}")
+
+    def sample(self, seed: int, knowledge: Optional[str] = None,
+               pool: Optional[list] = None) -> "Game":
+        """One world the acting seat cannot tell apart from this game, as a new
+        game from the same decision: its own view is identical, and the
+        opponent's hand, both libraries and future shuffles are sampled from
+        what it knows (`blind-public-v1`, its own decklist, by default; or
+        `format-pool-v1` with `pool`, the cards the opponent's deck may hold).
+        Look ahead on samples, never on the real game."""
+        self._has("dls_game_sample")
+        spec: dict[str, Any] = {"seed": seed}
+        if knowledge:
+            spec["knowledge"] = knowledge
+        if pool is not None:
+            spec["pool"] = list(pool)
+        raw = self._lib._dll.dls_game_sample(self._raw, json.dumps(spec).encode())
+        if not raw:
+            raise self._lib._error()
+        return Game(self._lib, raw)
+
+    def clone(self) -> "Game":
+        """An independent copy in the same state. A copy of a real game knows
+        its hidden cards and future draws: copy a `sample()` to look ahead."""
+        self._has("dls_game_clone")
+        raw = self._lib._dll.dls_game_clone(self._raw)
+        if not raw:
+            raise self._lib._error()
+        return Game(self._lib, raw)
 
     def bot(self, name: str, seat: int, seed: int, knowledge: Optional[str] = None,
             pool: Optional[list] = None) -> "Bot":
