@@ -81,8 +81,8 @@ what it was written to understand.
 
 ## Seeing what changed
 
-Each release's notes come from DeckLogic's `kit-notes` tool and say, in a
-bot's terms: the engine version and ABI at both
+Engine maintainers can supply comparisons from DeckLogic's `kit-notes` tool.
+Those notes describe, in a bot's terms, the engine version and ABI at both
 ends, every action kind, field and observation field added (or, if one was
 ever removed, a **Breaking** banner), and for each pack the cards that were
 added, removed or changed. Changes include printed cost, types, P/T,
@@ -93,6 +93,13 @@ today's engine can no longer load. Over 2026-10-27 to 2026-11-10, for
 example: 7 new action kinds, TRK gained 100 cards and moved 234
 cards from provisional to real Arena ids, and five HOB and FRA cards changed
 behaviour.
+
+The local next-kit generator additionally compares recorded wire paths and
+type sets. Missing historical inventories are reported as unavailable. Neither
+name nor type comparisons prove unchanged field meanings or required/optional
+status; those still need contract tests and maintainer review. Automated kit
+release notes identify build inputs and capabilities, but do not currently run
+this engine-history comparison. A kit-only update may retain the same engine.
 
 ## When we do break something
 

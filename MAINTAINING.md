@@ -197,6 +197,16 @@ tournament. Default ten-pair validation remains a sample of the fixed deck
 schedule, not universal qualification or evidence of strength. Record actual
 sample size, caps and faults alongside comparisons.
 
+For next-kit requalification, use the retained old entry as `import --source`
+and a fresh context-specific `--registry`, with the new host/pack/decks and
+intended timeout. Import copies the source, discards the copied old receipt,
+qualifies again, and admits only a passing copy. Verify the printed admitted
+path with those same inputs before comparison. Do not overwrite the old
+receipt or bump the bot version solely because the evaluation context changed.
+Retire an entry by moving the entire directory to a new destination outside
+the active registry, retaining its old host, pack, decks, settings and reports.
+The archive can be selected explicitly for old-context reproduction.
+
 ## Failure recovery and promotion
 
 - Authentication/network/API lookup errors are failures, not evidence that a
