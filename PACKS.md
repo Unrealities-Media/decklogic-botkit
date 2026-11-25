@@ -5,6 +5,9 @@ lists downloadable packs. No private repository access or credentials are
 needed. These are separate artifacts from the Botkit release archives; the
 archives include the original synthetic DEMO pack.
 
+For Standard, the [training guide](STANDARD.md) links to the downloadable
+60-card lists and the exact pack staged with them.
+
 Download a snapshot, retain its manifest and use the same files throughout an
 evaluation. The feed can change. Its `sim_version` identifies the publishing
 engine; start with that engine's Botkit release and check the host's reported

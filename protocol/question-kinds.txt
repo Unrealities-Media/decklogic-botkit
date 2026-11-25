@@ -20,6 +20,7 @@ pick_purpose/attach_returned_aura
 pick_purpose/cast_copy_or_cease
 pick_purpose/cast_exiled_or_damage
 pick_purpose/cast_exiled_or_leave
+pick_purpose/cast_once_from_graveyard
 pick_purpose/controller_chosen_discard owner
 pick_purpose/controller_chosen_exile owner
 pick_purpose/cost_tap_payer
@@ -27,8 +28,13 @@ pick_purpose/counter_unless_payment
 pick_purpose/crew
 pick_purpose/discard
 pick_purpose/discover_cast_or_hand
+pick_purpose/empower_jace
 pick_purpose/entry_effect_order
 pick_purpose/entry_replacement_order
+pick_purpose/exile_controlled_permanent
+pick_purpose/exile_from_opponent_graveyard
+pick_purpose/exile_namesakes from_hand owner
+pick_purpose/exiled_card_to_play through_next_turn
 pick_purpose/exiled_land_play_while_exiled
 pick_purpose/exiled_with_source_to_hand
 pick_purpose/from_top
@@ -61,6 +67,7 @@ pick_purpose/return_controlled_land
 pick_purpose/return_from_graveyard
 pick_purpose/riddles_partition
 pick_purpose/sacrifice
+pick_purpose/sacrifice_then_gain_toughness beneficiary
 pick_purpose/searched_library_to_exile_playable library
 pick_purpose/tap_humans
 pick_purpose/tutor_land_to_battlefield tapped
@@ -68,6 +75,7 @@ pick_purpose/tutor_to_graveyard
 pick_purpose/tutor_to_hand
 pick_purpose/tutor_to_hand_unrevealed
 pick_purpose/ward_payment
+pick_purpose/would_die_replacement
 question/assign_combat_damage attacker blocker first_strike lethal remaining seat tramples_over
 question/assign_top revealed seat to_graveyard
 question/attack_tax seat
@@ -83,6 +91,7 @@ question/counter_replacement amount counter seat target
 question/declare_attackers seat
 question/declare_blockers seat
 question/entry_attack_defender card seat
+question/keyword_choice card seat source
 question/library_placement card seat
 question/mulligan seat taken
 question/pick context purpose seat
