@@ -266,6 +266,8 @@ The archive can be selected explicitly for old-context reproduction.
   any repository immutability restrictions. Do not mix artifacts from different
   builds. The workflow performs no automatic deletion, repair or overwrite.
   Rerunning only skips once metadata is complete; verify actual checksums too.
+- Set `verify_only` on a manual dispatch to run the release build and tests on
+  all three platforms without publishing, even if the kit already has a release.
 - Manual dispatch accepts a private ref and an explicit `promote_latest`
   boolean, default **false**, even for `main`. Historical builds therefore pass
   `--latest=false`; select promotion only after reviewing the intended latest

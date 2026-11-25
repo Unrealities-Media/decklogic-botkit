@@ -2,7 +2,7 @@
 # directory can `import botlib` (pip install examples/python). Copying
 # botlib.py next to your bot works just as well; it has no dependencies.
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=84.2.1"]
 build-backend = "setuptools.build_meta"
 
 [project]

@@ -52,7 +52,7 @@ jobs:
         run: |
           cc -Wall -Wextra -Werror -fsyntax-only -Isimlib/include .github/header_smoke.c
           c++ -Wall -Wextra -Werror -fsyntax-only -x c++ -Isimlib/include .github/header_smoke.c
-      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # same pin as release workflow
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # same pin as release workflow
         with:
           toolchain: "1.99.1" # supported stable toolchain used by release builds
       - name: Build standalone Rust starter

@@ -4,7 +4,7 @@
 # The library itself is not in the package: point DECKLOGIC_SIMLIB or
 # DECKLOGIC_SIMLIB_DIR at the release's file, or pass its path to Library().
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=84.2.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -17,7 +17,7 @@ license-files = ["LICENSE"]
 dependencies = []
 
 [project.optional-dependencies]
-gymnasium = ["gymnasium>=1.0"]
+gymnasium = ["gymnasium>=1.4.0"]
 
 [project.scripts]
 simlib-traces = "simlib_traces:main"
