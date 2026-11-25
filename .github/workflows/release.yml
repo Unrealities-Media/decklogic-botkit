@@ -31,6 +31,10 @@ on:
         description: "DeckLogic branch, tag or commit to build"
         default: main
         required: true
+      verify_only:
+        description: "Build and test all platforms without publishing a release"
+        type: boolean
+        default: false
       promote_latest:
         description: "Explicitly promote this manual build to Latest (including historical refs)"
         type: boolean
@@ -62,7 +66,7 @@ jobs:
       public_sha: ${{ steps.identity.outputs.public_commit }}
       tag: ${{ steps.identity.outputs.tag }}
       digest: ${{ steps.identity.outputs.kit_sha256 }}
-      build: ${{ steps.exists.outputs.build }}
+      build: ${{ inputs.verify_only && 'true' || steps.exists.outputs.build }}
       latest: ${{ steps.exists.outputs.latest }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -103,6 +107,7 @@ jobs:
           python3 kit/.github/release_identity.py --private decklogic --public kit \
             --out release-identity.json --github-output "$GITHUB_OUTPUT"
       - id: exists
+        if: ${{ !inputs.verify_only }}
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.identity.outputs.tag }}
@@ -151,7 +156,7 @@ jobs:
           token: ${{ secrets.DECKLOGIC_READ_TOKEN }}
           path: decklogic
           persist-credentials: false
-      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable branch @ 2026-07-16
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable branch @ 2026-11-15
         with:
           toolchain: "1.99.1" # = DeckLogic's rust-toolchain.toml
       - name: Build (output kept private)
@@ -242,6 +247,7 @@ jobs:
 
   publish:
     name: Publish release
+    if: ${{ !inputs.verify_only }}
     needs: [check, build]
     runs-on: ubuntu-latest
     timeout-minutes: 10
