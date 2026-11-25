@@ -53,6 +53,8 @@ decision.actions[].action<cast>.targets[] object|string
 decision.actions[].action<cast>.targets[].object int
 decision.actions[].action<cast>.targets[].player int
 decision.actions[].action<cast>.x int
+decision.actions[].action<choose_keyword>.action string
+decision.actions[].action<choose_keyword>.keyword int
 decision.actions[].action<choose_trigger_order>.action string
 decision.actions[].action<choose_trigger_order>.batch int
 decision.actions[].action<choose_trigger_order>.entry int
@@ -214,6 +216,10 @@ decision.question<declare_attackers>.kind string
 decision.question<declare_attackers>.seat int
 decision.question<declare_blockers>.kind string
 decision.question<declare_blockers>.seat int
+decision.question<keyword_choice>.card int
+decision.question<keyword_choice>.kind string
+decision.question<keyword_choice>.seat int
+decision.question<keyword_choice>.source int
 decision.question<library_placement>.card int
 decision.question<library_placement>.kind string
 decision.question<library_placement>.seat int

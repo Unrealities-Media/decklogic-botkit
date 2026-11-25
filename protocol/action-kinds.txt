@@ -22,6 +22,7 @@ choose_counter_kind kind
 choose_counter_replacement effect event step
 choose_entry_attack_defender defender
 choose_entry_replacement effect index source
+choose_keyword keyword
 choose_number number
 choose_odd_or_even parity
 choose_pile face_up
@@ -29,6 +30,7 @@ choose_stored_choice creature_type
 choose_trigger_order batch entry
 choose_trigger_targets damage_split mode targets
 choose_untap object untap
+choose_would_die_replacement effect event
 decline_optional
 decline_take
 done_attacking
@@ -49,4 +51,5 @@ put_on_library card placement
 remove_counter kind
 search_and_fail
 select_for_proliferate
+select_player_for_proliferate player
 take_life_loss

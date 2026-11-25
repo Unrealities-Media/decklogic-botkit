@@ -1,6 +1,6 @@
 # DeckLogic bot kit
 
-Build a Magic: The Gathering Limited bot in any language and play it against
+Build a Magic: The Gathering bot in any language and play it against
 DeckLogic's bots offline, with scores that come with error bars.
 
 This repository holds what an outside bot builder needs and nothing else:
@@ -28,6 +28,8 @@ simulator source is not included here.
 then playing ours, writing one, submitting it and running a tournament.
 For model-based policies, [LEARNED_BOTS.md](LEARNED_BOTS.md) connects training,
 encoder/weight identity, deterministic inference and submission packaging.
+To collect traces and run self-play with complete Standard decks,
+see [Train a bot on Standard decks](STANDARD.md).
 
 ## Two ways to play
 

@@ -5,6 +5,9 @@ imitation, search over rollouts. If you only want to play your bot against
 ours, the [stdio protocol](../README.md) is simpler. Use this when the pipe is
 the bottleneck.
 
+For deck downloads, pack compatibility, and held-out evaluation, see
+[Train a bot on Standard decks](../STANDARD.md).
+
 The [learned-bot handoff recipe](../LEARNED_BOTS.md) explains how to turn
 training output into a self-contained stdio submission with model identity
 and deployment checks.

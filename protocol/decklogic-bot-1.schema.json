@@ -9,6 +9,8 @@
     { "$ref": "#/$defs/game_start" },
     { "$ref": "#/$defs/decision" },
     { "$ref": "#/$defs/action" },
+    { "$ref": "#/$defs/simulate" },
+    { "$ref": "#/$defs/simulated" },
     { "$ref": "#/$defs/game_end" },
     { "$ref": "#/$defs/bye" }
   ],
@@ -25,8 +27,16 @@
         "cards": { "type": "object", "description": "Optional: the decklogic-cards/1 sheet for the pack in play (see PROTOCOL.md, What a card is)." },
         "limits": {
           "type": "object",
-          "description": "Optional: the time limits the host enforces, in milliseconds.",
-          "properties": { "decision_ms": { "type": "integer" }, "handshake_ms": { "type": "integer" } }
+          "description": "Optional: the limits the host enforces. Times are in milliseconds; `simulate` is present only when the host offers look-ahead.",
+          "properties": {
+            "decision_ms": { "type": "integer" },
+            "handshake_ms": { "type": "integer" },
+            "simulate": {
+              "type": "object",
+              "description": "Per decision: at most `calls` simulate messages, each applying at most `steps` actions.",
+              "properties": { "calls": { "type": "integer", "minimum": 1 }, "steps": { "type": "integer", "minimum": 0 } }
+            }
+          }
         }
       }
     },
@@ -91,6 +101,34 @@
         "type": { "const": "action" },
         "n": { "type": "integer", "minimum": 0 },
         "id": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "simulate": {
+      "description": "bot to host, optional: any number of times before `action`, within hello.limits.simulate",
+      "type": "object",
+      "required": ["type", "n", "seed"],
+      "properties": {
+        "type": { "const": "simulate" },
+        "n": { "type": "integer", "minimum": 0, "description": "The outstanding decision's n." },
+        "seed": { "type": "integer", "minimum": 0, "description": "Chooses the sampled world: the same seed at the same decision gives the same world." },
+        "actions": { "type": "array", "items": { "type": "integer", "minimum": 0 }, "description": "Action ids applied in order, each among the actions offered at that step of the sampled game, whichever seat decides it." }
+      }
+    },
+    "simulated": {
+      "description": "host to bot: the answer to `simulate`. Nothing in it is the real game.",
+      "type": "object",
+      "required": ["type", "n", "applied", "calls_left"],
+      "properties": {
+        "type": { "const": "simulated" },
+        "n": { "type": "integer", "minimum": 0 },
+        "applied": { "type": "integer", "minimum": 0 },
+        "calls_left": { "type": "integer", "minimum": 0 },
+        "error": { "type": "string", "description": "Present when not every action applied or the request was refused." },
+        "outcome": { "enum": ["win", "loss", "draw", "capped"], "description": "From the asking seat's side, once the sampled game is over." },
+        "to_act": { "enum": [0, 1] },
+        "observation": { "type": "object", "description": "Seat `to_act`'s view of the sampled game." },
+        "question": { "type": "object" },
+        "actions": { "type": "array" }
       }
     },
     "game_end": {
